@@ -17,18 +17,15 @@ jobs:
 
       - name: Generate story pages, sitemap and RSS
         env:
-          SUPABASE_URL: https://slfhaylbtcldxoooqgpa.supabase.co
-          SUPABASE_KEY: sb_publishable_TlPoT3kDXZVTXsVe-ASYiA_BRnWGPfm
+          PAPARAZZI_API: https://paparazzi-api.squashberrypay.workers.dev
         run: |
           node <<'NODE'
           const fs = require('fs');
           const path = require('path');
 
           const SITE = 'https://squashberry.github.io/PAPARAZZIgambia';
-          const API = process.env.SUPABASE_URL + '/rest/v1/paparazi_articles'
-            + '?select=id,title,slug,excerpt,body,cover_url,category,status,created_at,updated_at,published_at,paparazi_profiles(display_name,username)'
-            + '&status=eq.published'
-            + '&order=published_at.desc';
+          const API = process.env.PAPARAZZI_API + '/api/articles'
+            + '?status=published&limit=50&order=published_at';
 
           const esc = value => String(value ?? '')
             .replace(/&/g,'&amp;')
@@ -123,9 +120,10 @@ jobs:
           };
 
           (async()=>{
-            const response = await fetch(API, {headers:{apikey:process.env.SUPABASE_KEY,Authorization:'Bearer '+process.env.SUPABASE_KEY}});
-            if(!response.ok) throw new Error('Supabase returned '+response.status);
-            const rows = await response.json();
+            const response = await fetch(API);
+            if(!response.ok) throw new Error('PAPARAZZI API returned '+response.status);
+            const payload = await response.json();
+            const rows = payload.data || [];
 
             const storyDir = path.join(process.cwd(),'stories');
             fs.mkdirSync(storyDir,{recursive:true});
