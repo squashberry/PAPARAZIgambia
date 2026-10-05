@@ -634,11 +634,13 @@
   }
 
   async function initJoin(){
-    const signIn=$("#sign-in-form");
-    const signUp=$("#sign-up-form");
+    const signIn=$("#sign-in-form"),signUp=$("#sign-up-form"),verifyPanel=$("#verification-panel");
     if(!signIn||!signUp)return;
-
     const tabs=$$(".switcher button");
+    const forms=$("#auth-forms");
+    let verificationEmail="";
+    let resendTimer=null;
+
     const setMode=mode=>{
       const signin=mode==="signin";
       tabs.forEach(button=>{
@@ -646,11 +648,77 @@
         button.classList.toggle("active",active);
         button.setAttribute("aria-selected",String(active));
       });
-      signIn.style.display=signin?"":"none";
-      signUp.style.display=signin?"none":"";
+      signIn.hidden=!signin;
+      signUp.hidden=signin;
+      if(verifyPanel)verifyPanel.hidden=true;
+      if(forms)forms.classList.remove("auth-success");
     };
 
-    tabs.forEach(button=>button.addEventListener("click",event=>{
+    const setBusy=(button,busy,label)=>{
+      if(!button)return;
+      button.disabled=busy;
+      if(busy){
+        button.dataset.originalLabel=button.textContent;
+        button.innerHTML="<span class='button-spinner'></span>"+esc(label||"Working…");
+      }else{
+        button.textContent=button.dataset.originalLabel||button.textContent;
+      }
+    };
+
+    const showVerification=email=>{
+      verificationEmail=email;
+      if(forms)forms.classList.add("auth-success");
+      signIn.hidden=true;
+      signUp.hidden=true;
+      if(verifyPanel)verifyPanel.hidden=false;
+      const label=$("#verification-email");
+      if(label)label.textContent=email;
+      const inputs=$$(".otp-input");
+      inputs.forEach((input,index)=>{input.value="";input.disabled=false;if(index===0)input.focus();});
+      startResendTimer(60);
+    };
+
+    const startResendTimer=seconds=>{
+      const button=$("#resend-code");
+      if(!button)return;
+      clearInterval(resendTimer);
+      let left=seconds;
+      button.disabled=true;
+      button.textContent="Resend code ("+left+"s)";
+      resendTimer=setInterval(()=>{
+        left--;
+        if(left<=0){
+          clearInterval(resendTimer);
+          button.disabled=false;
+          button.textContent="Resend code";
+        }else button.textContent="Resend code ("+left+"s)";
+      },1000);
+    };
+
+    const verificationMessage=(message,kind="")=>{
+      const box=$("#verification-status");
+      if(!box)return;
+      box.textContent=message||"";
+      box.className="auth-feedback "+kind;
+      box.hidden=!message;
+    };
+
+    const completeVerification=()=>{
+      if(forms)forms.classList.remove("auth-success");
+      if(verifyPanel)verifyPanel.classList.add("verified");
+      const title=$("#verification-title"),copy=$("#verification-copy");
+      if(title)title.textContent="EMAIL VERIFIED";
+      if(copy)copy.textContent="Your PAPARAZZI account is ready. Welcome to the newsroom.";
+      const codeGrid=$("#otp-grid"),actions=$("#verification-actions");
+      if(codeGrid)codeGrid.hidden=true;
+      if(actions)actions.hidden=true;
+      const success=$("#verification-success");
+      if(success)success.hidden=false;
+      setTimeout(()=>location.href="studio.html",900);
+    };
+
+    const tabsReady=!!tabs.length;
+    if(tabsReady)tabs.forEach(button=>button.addEventListener("click",event=>{
       event.preventDefault();
       setMode(button.dataset.mode);
     }));
@@ -661,85 +729,146 @@
       return;
     }
 
+    const inputs=$$(".otp-input");
+    inputs.forEach((input,index)=>{
+      input.addEventListener("input",()=>{
+        input.value=input.value.replace(/\D/g,"").slice(0,1);
+        if(input.value&&inputs[index+1])inputs[index+1].focus();
+      });
+      input.addEventListener("keydown",event=>{
+        if(event.key==="Backspace"&&!input.value&&inputs[index-1])inputs[index-1].focus();
+      });
+      input.addEventListener("paste",event=>{
+        const pasted=(event.clipboardData?.getData("text")||"").replace(/\D/g,"").slice(0,6);
+        if(!pasted)return;
+        event.preventDefault();
+        pasted.split("").forEach((digit,i)=>{if(inputs[i])inputs[i].value=digit;});
+        inputs[Math.min(pasted.length,inputs.length)-1]?.focus();
+      });
+    });
+
+    const verifyBtn=$("#verify-code");
+    if(verifyBtn)verifyBtn.addEventListener("click",async()=>{
+      const code=inputs.map(x=>x.value).join("");
+      if(code.length!==6){verificationMessage("Enter all six digits first.","error");return;}
+      verificationMessage("Checking your code…","loading");
+      setBusy(verifyBtn,true,"Verifying…");
+      const result=await withTimeout(
+        supabase.auth.verifyEmailCode({email:verificationEmail,code}),
+        10000,
+        {error:{message:"Verification took too long. Check your connection and try again."}}
+      );
+      setBusy(verifyBtn,false);
+      if(result?.error){
+        verificationMessage(result.error.message,"error");
+        verifyPanel?.classList.remove("shake");
+        void verifyPanel?.offsetWidth;
+        verifyPanel?.classList.add("shake");
+        return;
+      }
+      verificationMessage("Verified.","success");
+      completeVerification();
+    });
+
+    const resend=$("#resend-code");
+    if(resend)resend.addEventListener("click",async()=>{
+      if(!verificationEmail)return;
+      verificationMessage("Sending a fresh code…","loading");
+      const result=await supabase.auth.resendVerificationCode(verificationEmail);
+      if(result?.error){verificationMessage(result.error.message,"error");return;}
+      verificationMessage("New code sent. Check your inbox.","success");
+      startResendTimer(60);
+    });
+
+    const changeEmail=$("#change-email");
+    if(changeEmail)changeEmail.addEventListener("click",()=>{
+      clearInterval(resendTimer);
+      if(verifyPanel)verifyPanel.hidden=true;
+      if(forms)forms.classList.remove("auth-success");
+      signUp.hidden=false;
+      tabs.forEach(button=>button.classList.toggle("active",button.dataset.mode==="signup"));
+      $("#signup-email").value=verificationEmail;
+      $("#signup-email").focus();
+    });
+
     signIn.addEventListener("submit",async e=>{
       e.preventDefault();
+      const button=signIn.querySelector("button[type='submit']");
       const box=$("#sign-in-status");
+      setStatus(box,"","");setBusy(button,true,"Checking account…");
       const result=await withTimeout(
         supabase.auth.signInWithPassword({
           email:$("#signin-email").value.trim(),
           password:$("#signin-password").value
         }),
-        8000,
+        10000,
         {error:{message:"The sign-in service took too long to respond. Try again."}}
       );
+      setBusy(button,false);
       if(result?.error){
-        setStatus(box,result.error.message.includes("Invalid login")
-          ?"That email or password didn't match. Try again."
+        const code=result.data?.code;
+        if(result.error.status===404){
+          setStatus(box,"No PAPARAZZI account found for that email.","error");
+          toast("No account found. Create one to join PAPARAZZI.","error");
+          const switchBtn=tabs.find(x=>x.dataset.mode==="signup");
+          if(switchBtn)switchBtn.click();
+          $("#signup-email").value=$("#signin-email").value.trim();
+          return;
+        }
+        if(result.error.status===403&&code==="EMAIL_NOT_VERIFIED"){
+          showVerification(result.data?.email||$("#signin-email").value.trim());
+          verificationMessage("Your email is not verified yet. We sent a fresh code.","error");
+          return;
+        }
+        setStatus(box,result.error.status===401
+          ?"Your password doesn't match. Check it and try again."
           :result.error.message,"error");
         return;
       }
-      setStatus(box,"You're in. Taking you to the newsroom…","ok");
-      setTimeout(()=>location.href="studio.html",450);
+      setStatus(box,"","");toast("Welcome back. Opening the newsroom.","success");
+      signIn.classList.add("auth-complete");
+      setTimeout(()=>location.href="studio.html",650);
     });
 
     signUp.addEventListener("submit",async e=>{
       e.preventDefault();
-      const box=$("#sign-up-status");
-      const name=$("#signup-name").value.trim();
-      const email=$("#signup-email").value.trim();
-      const password=$("#signup-password").value;
-
-      if(password!==$("#signup-confirm").value){
-        setStatus(box,"Your passwords don't match yet.","error");
-        return;
-      }
-      if(password.length<8){
-        setStatus(box,"Use at least 8 characters for the password.","error");
-        return;
-      }
-
+      const box=$("#sign-up-status"),button=signUp.querySelector("button[type='submit']");
+      const name=$("#signup-name").value.trim(),email=$("#signup-email").value.trim(),password=$("#signup-password").value;
+      if(password!==$("#signup-confirm").value){setStatus(box,"Your passwords don't match yet.","error");return;}
+      if(password.length<8){setStatus(box,"Use at least 8 characters for the password.","error");return;}
+      setStatus(box,"","");setBusy(button,true,"Creating your account…");
       const result=await withTimeout(
-        supabase.auth.signUp({email,password}),
-        8000,
-        {error:{message:"The sign-up service took too long to respond. Try again."}}
+        supabase.auth.signUp({email,password,name}),
+        12000,
+        {error:{message:"Account creation took too long. Try again."}}
       );
-
-      if(result?.error){setStatus(box,result.error.message,"error");return;}
-
-      if(result?.data?.user&&Array.isArray(result.data.user.identities)&&result.data.user.identities.length===0){
-        setStatus(box,"That account already exists. Sign in instead.","error");
+      setBusy(button,false);
+      if(result?.error){
+        if(result.error.status===409){
+          setStatus(box,"That email already has a PAPARAZZI account. Sign in instead.","error");
+          toast("Account already exists.","error");
+          const switchBtn=tabs.find(x=>x.dataset.mode==="signin");
+          if(switchBtn)switchBtn.click();
+          $("#signin-email").value=email;
+          $("#signin-password").focus();
+        }else setStatus(box,result.error.message,"error");
         return;
       }
-
-      if(result?.data?.session){
-        const profile=await ensureProfile(result.data.user);
-        if(profile&&name&&profile.display_name!==name){
-          await supabase.from("paparazi_profiles").update({display_name:name}).eq("id",result.data.user.id);
-        }
-        setStatus(box,"Account created. Welcome to PAPARAZZI.","ok");
-        setTimeout(()=>location.href="studio.html",500);
-      }else{
-        setStatus(box,"Account created. Check your email to confirm it, then come back and sign in.","ok");
+      const profileUser=result?.data?.user;
+      if(profileUser&&name){
+        const profile=await ensureProfile(profileUser);
+        if(profile&&profile.display_name!==name)await supabase.from("paparazi_profiles").update({display_name:name});
       }
+      toast("Account created. Check your inbox.","success");
+      showVerification(email);
+      verificationMessage("Account created. Your six-digit verification code is on its way.","success");
     });
 
     const reset=$("#reset-password");
     if(reset)reset.addEventListener("click",async()=>{
-      const email=$("#signin-email").value.trim();
-      const box=$("#sign-in-status");
-      if(!email){
-        setStatus(box,"Enter your email first, then tap forgot password.","error");
-        return;
-      }
-      const result=await withTimeout(
-        supabase.auth.resetPasswordForEmail(email),
-        8000,
-        {error:{message:"The reset service took too long to respond. Try again."}}
-      );
-      setStatus(box,
-        result?.error?.message||"Password reset instructions have been sent to your email.",
-        result?.error?"error":"ok"
-      );
+      const email=$("#signin-email").value.trim(),box=$("#sign-in-status");
+      if(!email){setStatus(box,"Enter your email first, then tap forgot password.","error");return;}
+      setStatus(box,"Password recovery isn't available yet. Your account is safe; use your existing password for now.","error");
     });
   }
 
