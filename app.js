@@ -597,12 +597,13 @@
       +"<div class='latest-info'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
       +"<h3>"+esc(story.title)+"</h3>"
       +"<p>"+esc(story.excerpt||(story.body||"").slice(0,170))+"</p>"
-      +"<div class='meta' style='margin-top:10px'><a class='author-link' href='"+authorHref(story.paparazi_profiles?.username||story.author?.username)+"'><strong>"+esc(author)+"</strong></a><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
+      +"<div class='meta latest-meta' style='margin-top:10px'><span class='author-link'><strong>"+esc(author)+"</strong></span><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
       +"<div class='latest-side'><div class='category'>"+esc(story.category||"Story")+"</div><span class='read'>READ →</span></div></a>";
   }
 
   async function initHome(){
     if(!$("#lead-title"))return;
+    initHomeSearchStickiness();
 
     updateSocialMeta({
       title:"PAPARAZZI🇬🇲 — The Gambia's Social Scene",
