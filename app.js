@@ -1,11 +1,7 @@
 (function(){
   "use strict";
 
-  const cfg=window.PAPARAZI_CONFIG||{};
-  const supabase=window.supabase&&cfg.supabaseUrl&&cfg.supabasePublishableKey
-    ?window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey)
-    :null;
-
+  const supabase=window.PAPARAZZI_API||null;
   window.PAPARAZI={supabase};
 
   const $=(s,r=document)=>r.querySelector(s);
