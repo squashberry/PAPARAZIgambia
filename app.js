@@ -1324,16 +1324,16 @@
 
   document.addEventListener("DOMContentLoaded",()=>installImageWatermarks());
   function initStateForms(){
-    $("[data-state-form]").forEach(form=>{
+    $$("[data-state-form]").forEach(form=>{
       if(form.dataset.stateReady==="1")return;
       form.dataset.stateReady="1";
-      const steps=$(".state-step",form),dots=$("[data-state-dot]",form),count=$("[data-state-count]",form);
+      const steps=$$(".state-step",form),dots=$$("[data-state-dot]",form),count=$("[data-state-count]",form);
       let current=0;
       const paint=()=>{steps.forEach((step,i)=>step.hidden=i!==current);dots.forEach((dot,i)=>dot.classList.toggle("active",i===current));if(count)count.textContent=(current+1)+" / "+steps.length;};
       form.addEventListener("click",e=>{
         const next=e.target.closest("[data-state-next]"),back=e.target.closest("[data-state-back]");
         if(!next&&!back)return;e.preventDefault();
-        if(next){const fields=$("input,textarea,select",steps[current]).filter(el=>!el.disabled&&el.type!=="file");const invalid=fields.find(el=>!el.checkValidity());if(invalid){invalid.reportValidity();return;}if(current<steps.length-1)current++;}
+        if(next){const fields=$$("input,textarea,select",steps[current]).filter(el=>!el.disabled&&el.type!=="file");const invalid=fields.find(el=>!el.checkValidity());if(invalid){invalid.reportValidity();return;}if(current<steps.length-1)current++;}
         else if(current>0)current--;
         paint();steps[current]?.querySelector("input,textarea,select")?.focus({preventScroll:true});
       });paint();
