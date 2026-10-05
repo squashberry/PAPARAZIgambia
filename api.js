@@ -35,7 +35,7 @@
 
     if(!response.ok){
       return {
-        data:payload?.data ?? null,
+        data:payload?.data ?? payload ?? null,
         error:makeError(payload?.error || payload?.message || ("Request failed ("+response.status+")."),response.status)
       };
     }
