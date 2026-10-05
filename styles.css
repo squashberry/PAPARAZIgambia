@@ -286,3 +286,5 @@ body.telegram-mini-app{padding-bottom:calc(env(safe-area-inset-bottom) + 12px)}
   .mobile-nav{top:72px}
   .mobile-nav.is-open{display:grid}
 }
+
+.nav-signout{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:9px 12px;font-weight:800;font-size:.75rem;cursor:pointer}.nav-signout:hover{background:#fff}.mobile-signout{border:1px solid var(--line);background:transparent;text-align:left;padding:12px;border-radius:12px;font-weight:800;cursor:pointer}.mobile-signout:hover{background:#fff}@media(max-width:1050px){.nav-signout{display:none}}
