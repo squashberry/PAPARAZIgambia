@@ -26,7 +26,7 @@ All three tables have RLS enabled. Anonymous submissions are not publicly readab
 
 ## GitHub Pages
 
-Repository: https://github.com/squashberry/PAPARAZIgambia
-Expected site: https://squashberry.github.io/PAPARAZIgambia/
+Repository: https://github.com/squashberry/PAPARAZZIgambia
+Expected site: https://squashberry.github.io/PAPARAZZIgambia/
 
 The site is intentionally dependency-light and can be served directly by GitHub Pages.
