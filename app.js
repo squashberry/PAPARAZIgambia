@@ -757,6 +757,8 @@
       });
       signIn.hidden=!signin;
       signUp.hidden=signin;
+      const progress=$(".signup-progress");
+      if(progress)progress.hidden=signin;
       if(verifyPanel)verifyPanel.hidden=true;
       if(forms)forms.classList.remove("auth-success");
     };
@@ -774,6 +776,8 @@
 
     const showVerification=email=>{
       verificationEmail=email;
+      const progress=$(".signup-progress");
+      if(progress){progress.hidden=false;$(".signup-state-dot").forEach(dot=>dot.classList.toggle("active",Number(dot.dataset.step)===3));}
       if(forms)forms.classList.add("auth-success");
       signIn.hidden=true;
       signUp.hidden=true;
