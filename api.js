@@ -294,6 +294,10 @@
         return normalize(await request("/api/story-desk/"+encodeURIComponent(submissionId)+"/work",{method:"POST",body:JSON.stringify({}),write:true}));
       },
 
+      async getTelegramConnectCode(){ return normalize(await request("/api/telegram/connect-code",{method:"POST",write:true})); },
+      async getActiveAd(placement="story"){ return normalize(await request("/api/ads/active?placement="+encodeURIComponent(placement))); },
+      async recordAdEvent(id,type="impression"){ return normalize(await request("/api/ads/"+encodeURIComponent(id)+"/event",{method:"POST",body:JSON.stringify({type}),write:true})); },
+
       async listApiKeys(){
         return normalize(await request("/api/api-keys"));
       },
