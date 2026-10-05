@@ -127,6 +127,7 @@
     script.id="paparazzi-article-schema";
     script.textContent=JSON.stringify({
       "@context":"https://schema.org",
+      "@graph":[{
       "@type":"NewsArticle",
       headline:story.title,
       description:story.excerpt||String(story.body||"").slice(0,180),
@@ -146,6 +147,14 @@
       inLanguage:"en-GM",
       articleSection:story.category||"Story",
       isPartOf:{"@type":"WebSite",name:"PAPARAZZI🇬🇲",url:SITE_ORIGIN+"/"}
+      },{
+        "@type":"BreadcrumbList",
+        itemListElement:[
+          {"@type":"ListItem","position":1,"name":"PAPARAZZI🇬🇲","item":SITE_ORIGIN+"/"},
+          {"@type":"ListItem","position":2,"name":story.category||"Story","item":url},
+          {"@type":"ListItem","position":3,"name":story.title,"item":url}
+        ]
+      }]
     });
     document.head.appendChild(script);
   }
@@ -535,7 +544,8 @@
     const body=String(story.body||"").split(/\n\s*\n/).map(p=>"<p>"+esc(p).replace(/\n/g,"<br>")+"</p>").join("");
     const image=story.cover_url?coverImage(story.cover_url,story.title,"eager"):"";
 
-    const storyUrl=SITE_ORIGIN+"/story.html?slug="+encodeURIComponent(story.slug);
+    const storyUrl=SITE_ORIGIN+"/stories/"+encodeURIComponent(story.slug)+".html";
+    const shareUrl=location.href;
     const storyImage=story.cover_url||SITE_ORIGIN+"/og-image.svg";
     const storyDescription=story.excerpt||String(story.body||"").slice(0,180);
 
@@ -571,7 +581,7 @@
     if(shareStory)shareStory.onclick=()=>shareContent({
       title:story.title,
       text:storyDescription,
-      url:storyUrl,
+      url:shareUrl,
       imageUrl:story.cover_url||null
     });
   }
