@@ -659,11 +659,24 @@
       +"<span class='story-earn-mark'>₳</span><span class='story-earn-copy'><strong>Earn dalasis with PAPARAZZI</strong><small>Post original blogs. Unique photos and videos can earn bonus consideration when PAPARAZZI is your first publication.</small></span><span class='story-earn-arrow'>→</span>"
       +"</button></section>";
 
+    const adSlotHtml="<div id='story-ad-slot' class='story-ad-slot' aria-label='Advertisement'></div>";
     const relatedMarkup="<section class='related-section'><div class='section-head'><div><div class='eyebrow'>KEEP READING</div><h2>Related posts</h2></div></div><div class='related-grid'>"+relatedHtml+"</div></section>";
 
     const existingReader=$("#story-root .story-reader");
     if(existingReader){
-      existingReader.insertAdjacentHTML("beforeend",earningMarkup+relatedMarkup);
+      existingReader.insertAdjacentHTML("beforeend",adSlotHtml+earningMarkup+relatedMarkup);
+    }
+
+    const adSlotEl=$("#story-ad-slot");
+    if(adSlotEl&&window.PAPARAZZI_API?.auth?.getActiveAd){
+      try{
+        const ar=await window.PAPARAZZI_API.auth.getActiveAd("story"),ad=ar.data;
+        if(ad){
+          adSlotEl.innerHTML="<div class='story-ad-label'>ADVERTISEMENT</div><a class='story-ad-card' href='"+esc(ad.target_url)+"' target='_blank' rel='sponsored noopener noreferrer' data-ad-id='"+esc(ad.id)+"'><div class='story-ad-copy'><div class='eyebrow'>PARTNER</div><h3>"+esc(ad.title)+"</h3><p>"+esc(ad.body||"")+"</p><span>Learn more →</span></div>"+(ad.image_url?"<img src='"+esc(ad.image_url)+"' alt='' loading='lazy'>":"")+"</a>";
+          window.PAPARAZZI_API.auth.recordAdEvent(ad.id,"impression").catch(()=>{});
+          adSlotEl.querySelector(".story-ad-card")?.addEventListener("click",()=>window.PAPARAZZI_API.auth.recordAdEvent(ad.id,"click").catch(()=>{}));
+        }
+      }catch(_){}
     }
 
     const earnBtn=$("#story-earn-banner");
