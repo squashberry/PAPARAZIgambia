@@ -190,7 +190,7 @@
         });
         if(!result.error)dispatchAuth();
         return {
-          data:result.data?.user?{user:result.data.user,session:result.data.session?{}:null}:null,
+          data:result.data||null,
           error:result.error||null
         };
       },
