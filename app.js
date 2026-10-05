@@ -9,7 +9,8 @@
   window.PAPARAZI={supabase:supabase};
 
   const $=(s,r=document)=>r.querySelector(s);
-  const $=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  window["$"+"$"]=qsa;
   const emergencyHideSplash=()=>{
     const splash=$(".splash");
     if(!splash)return;
