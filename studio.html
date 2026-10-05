@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const media=[];
     for(let i=0;i<files.length;i++){
       let file=files[i];
-      if(window.PAPARAZZI_WATERMARK_FILE)file=await window.PAPARAZZI_WATERMARK_FILE(file);
+      if(window.PAPARAZZI_PREPARE_FILE)file=await window.PAPARAZZI_WATERMARK_FILE(file);
       const path="stories/"+session.user.id+"/"+(id||crypto.randomUUID())+"/"+crypto.randomUUID()+"-"+file.name;
       const u=await api.storage.from("paparazzi-media").upload(path,file,{contentType:file.type,cacheControl:"3600",upsert:false});
       if(u.error)throw new Error(u.error.message);
