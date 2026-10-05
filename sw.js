@@ -1,4 +1,4 @@
-const CACHE="paparazzi-v10";
+const CACHE="paparazzi-v11";
 const CORE=[
   "./",
   "./index.html",
@@ -10,6 +10,7 @@ const CORE=[
   "./offline.html",
   "./styles.css",
   "./app.js",
+  "./api.js",
   "./config.js",
   "./favicon.svg",
   "./manifest.webmanifest"
