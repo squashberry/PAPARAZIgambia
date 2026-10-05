@@ -633,6 +633,58 @@
       url:shareUrl,
       imageUrl:story.cover_url||null
     });
+
+    // Every story ends with related reading + a quiet contributor earnings CTA.
+    const related=starterStories.concat([]);
+    let relatedStories=[];
+    try{
+      const rr=await fetchStories(18);
+      relatedStories=(rr.data.length?rr.data:starterStories)
+        .filter(item=>item.slug!==story.slug)
+        .sort((a,b)=>String(a.category||"").localeCompare(String(b.category||""))===0?0:1)
+        .slice(0,3);
+    }catch(_){}
+    if(!relatedStories.length) relatedStories=starterStories.filter(item=>item.slug!==story.slug).slice(0,3);
+
+    const relatedHtml=relatedStories.map(item=>{
+      const authorName=item.paparazi_profiles?.display_name||item.author?.display_name||"PAPARAZZI🇬🇲";
+      return "<a class='related-card' data-morph href='"+storyHref(item)+"'>"
+        +"<div class='related-art'>"+coverImage(item.cover_url,item.title)+"</div>"
+        +"<div class='related-copy'><div class='kicker'>"+esc(item.category||"Story")+"</div>"
+        +"<h3>"+esc(item.title)+"</h3><div class='meta'><span>"+esc(authorName)+"</span><span>•</span><span>"+fmtDate(item.published_at||item.created_at)+"</span></div></div></a>";
+    }).join("");
+
+    const earningMarkup="<section class='story-earn-wrap'>"
+      +"<button class='story-earn-banner' id='story-earn-banner' type='button'>"
+      +"<span class='story-earn-mark'>₳</span><span class='story-earn-copy'><strong>Earn dalasis with PAPARAZZI</strong><small>Post original blogs. Unique photos and videos can earn bonus consideration when PAPARAZZI is your first publication.</small></span><span class='story-earn-arrow'>→</span>"
+      +"</button></section>";
+
+    const relatedMarkup="<section class='related-section'><div class='section-head'><div><div class='eyebrow'>KEEP READING</div><h2>Related posts</h2></div></div><div class='related-grid'>"+relatedHtml+"</div></section>";
+
+    const existingReader=$("#story-root .story-reader");
+    if(existingReader){
+      existingReader.insertAdjacentHTML("beforeend",earningMarkup+relatedMarkup);
+    }
+
+    const earnBtn=$("#story-earn-banner");
+    if(earnBtn)earnBtn.onclick=async()=>{
+      const session=await currentSession();
+      const showEarnModal=message=>{
+        let modal=$("#earn-modal");
+        if(!modal){
+          modal=document.createElement("div");
+          modal.id="earn-modal";
+          modal.className="modal-backdrop";
+          document.body.appendChild(modal);
+        }
+        modal.innerHTML="<div class='modal-card' role='dialog' aria-modal='true' aria-labelledby='earn-modal-title'><button class='modal-close' type='button' aria-label='Close'>×</button><div class='eyebrow'>PAPARAZZI EARNINGS</div><h2 id='earn-modal-title'>"+(session?"You're not eligible yet.":"Sign in to check your PAPARAZZI earnings.")+"</h2><p>"+esc(message)+"</p>"+(session?"<p class='modal-note'>Keep publishing original work, build your reporting record and check back as the newsroom grows.</p>":"<div class='form-actions'><a class='btn btn-dark' href='join.html'>Sign in / create account →</a></div>")+"</div>";
+        modal.classList.add("is-open");
+        modal.querySelector(".modal-close").onclick=()=>modal.classList.remove("is-open");
+        modal.onclick=e=>{if(e.target===modal)modal.classList.remove("is-open");};
+      };
+      if(!session)showEarnModal("You need a PAPARAZZI account before we can show your contributor eligibility. Create an account or sign in, then come back here.");
+      else showEarnModal("You're not eligible to earn on blog posts yet. Try harder to unlock eligibility and check back again.");
+    };
   }
 
   async function initJoin(){
