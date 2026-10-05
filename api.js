@@ -320,6 +320,22 @@
       }
     },
 
+    // Compatibility aliases for page-level scripts and older contributor pages.
+    getMyProfile(...args){ return client.auth.getMyProfile(...args); },
+    updateMyProfile(...args){ return client.auth.updateMyProfile(...args); },
+    applyContributor(...args){ return client.auth.applyContributor(...args); },
+    getPublicProfile(...args){ return client.auth.getPublicProfile(...args); },
+    getArticles(...args){ return client.auth.getArticles(...args); },
+    updateArticle(...args){ return client.auth.updateArticle(...args); },
+    getFollowing(...args){ return client.auth.getFollowing(...args); },
+    getNotificationPreferences(...args){ return client.auth.getNotificationPreferences(...args); },
+    updateNotificationPreferences(...args){ return client.auth.updateNotificationPreferences(...args); },
+    getNotifications(...args){ return client.auth.getNotifications(...args); },
+    markNotificationsRead(...args){ return client.auth.markNotificationsRead(...args); },
+    getStoryDesk(...args){ return client.auth.getStoryDesk(...args); },
+    claimStory(...args){ return client.auth.claimStory(...args); },
+    workStory(...args){ return client.auth.workStory(...args); },
+    getTelegramConnectCode(...args){ return client.auth.getTelegramConnectCode(...args); },
     from(table){
       return new QueryBuilder(table);
     },
