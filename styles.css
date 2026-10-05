@@ -240,3 +240,31 @@ html.menu-open,body.menu-open{overflow:hidden;height:100%;overscroll-behavior:no
 body.telegram-mini-app{padding-bottom:calc(env(safe-area-inset-bottom) + 12px)}
 .telegram-mini-app .site-header{padding-top:env(safe-area-inset-top)}
 .telegram-mini-app .support-float{bottom:calc(env(safe-area-inset-bottom) + 16px)}
+
+/* PAPARAZZI media protection */
+.pz-media{position:relative;display:block;overflow:hidden;line-height:0;isolation:isolate}
+.pz-media>img{display:block;width:100%;height:100%;object-fit:cover}
+.pz-watermark{position:absolute;right:10px;bottom:9px;z-index:2;padding:4px 7px;border:1px solid rgba(255,255,255,.3);border-radius:5px;background:rgba(0,0,0,.42);color:#fff;font:900 .58rem/1 Arial,sans-serif;letter-spacing:.16em;text-shadow:0 1px 3px #000;pointer-events:none;opacity:.9}
+.pz-media .pz-watermark{line-height:1}
+.rail-thumb .pz-media,.latest-thumb .pz-media,.lead-visual .pz-media,.story-cover .pz-media,.related-art .pz-media,.personal-story-art .pz-media,.story-ad-card .pz-media{width:100%;height:100%}
+
+/* Auth redesign */
+.auth-shell{padding:clamp(28px,6vw,76px) 0 100px;min-height:calc(100vh - 150px);display:flex;align-items:center}
+.auth-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,500px);gap:clamp(28px,6vw,90px);align-items:center}
+.auth-aside{max-width:650px}
+.auth-aside .eyebrow{font-size:.66rem;letter-spacing:.2em;font-weight:900}
+.auth-aside h1{font-family:Georgia,serif;font-size:clamp(4rem,8vw,8.5rem);line-height:.82;letter-spacing:-.07em;margin:14px 0 24px}
+.auth-aside p{max-width:570px;font-size:1.05rem;line-height:1.7;color:#5e5952}
+.editorial-list{display:grid;gap:10px;margin:30px 0 0;padding:0;list-style:none}
+.editorial-list li{border-top:1px solid var(--line);padding:12px 0;font-weight:750;font-size:.82rem}
+.auth-card{width:100%;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:28px;padding:clamp(22px,4vw,36px);box-shadow:0 24px 70px rgba(0,0,0,.08)}
+.auth-card .switcher{width:100%;margin-bottom:28px}
+.auth-card .switcher button{flex:1;padding:11px 10px}
+.auth-card h2{font-family:Georgia,serif;font-size:clamp(2rem,5vw,3rem);line-height:.95;letter-spacing:-.045em;margin:6px 0 14px}
+.auth-card .input{box-sizing:border-box;height:50px;padding:0 15px;border-radius:14px;font-size:.94rem}
+.auth-card .form-grid{gap:17px}
+.auth-card .form-actions .btn{min-height:48px}
+.auth-card .btn{border-radius:13px}
+.auth-card .signup-progress{width:100%}
+@media(max-width:900px){.auth-layout{grid-template-columns:1fr}.auth-aside{max-width:700px}.auth-aside h1{font-size:clamp(3.5rem,12vw,6rem)}.auth-aside p{font-size:.95rem}.auth-card{max-width:560px}}
+@media(max-width:560px){.auth-shell{padding:22px 0 70px;display:block}.auth-layout{gap:22px}.auth-aside h1{font-size:clamp(3.25rem,18vw,5rem);margin-bottom:17px}.editorial-list{display:none}.auth-card{padding:19px;border-radius:22px}.auth-card .input{height:48px}.auth-card .form-row{gap:14px}.auth-card .form-actions{display:grid;grid-template-columns:1fr}.auth-card .form-actions .btn{width:100%}}
