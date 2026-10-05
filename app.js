@@ -474,7 +474,7 @@
     try{
       const result=await withTimeout(
         supabase.from("paparazi_articles")
-          .select("id,title,slug,excerpt,body,cover_url,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
+          .select("id,title,slug,excerpt,body,cover_url,media_urls,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
           .eq("status","published")
           .order("published_at",{ascending:false,nullsFirst:false})
           .limit(limit),
@@ -514,6 +514,8 @@
     }catch(_){ return file; }
   }
 
+  window.PAPARAZZI_WATERMARK_FILE=watermarkImageFile;
+  function storyMediaUrls(story){const raw=Array.isArray(story?.media_urls)?story.media_urls:[];const urls=raw.map(item=>typeof item==="string"?item:item?.url).filter(Boolean);if(story?.cover_url&&!urls.includes(story.cover_url))urls.unshift(story.cover_url);return [...new Set(urls)];}
   function installImageWatermarks(root=document){
     $$("img:not([data-pz-wrapped])",root).forEach(img=>{
       if(img.closest(".pz-media")){img.dataset.pzWrapped="true";return;}
@@ -632,11 +634,14 @@
 
     const author=story.paparazi_profiles||story.author||{};
     const body=String(story.body||"").split(/\n\s*\n/).map(p=>"<p>"+esc(p).replace(/\n/g,"<br>")+"</p>").join("");
-    const image=story.cover_url?coverImage(story.cover_url,story.title,"eager"):"";
+    const mediaUrls=storyMediaUrls(story);
+    const primaryImage=mediaUrls[0]||null;
+    const image=primaryImage?coverImage(primaryImage,story.title,"eager"):"";
+    const gallery=mediaUrls.length>1?"<div class='story-gallery'>"+mediaUrls.map((url,index)=>"<figure class='story-gallery-item'><span class='pz-media' data-pz-watermark><img loading='lazy' referrerpolicy='no-referrer' src='"+esc(url)+"' alt='"+esc(story.title+" — image "+(index+1))+"'><span class='pz-watermark' aria-hidden='true'>PAPARAZZI</span></span><figcaption>PHOTO "+String(index+1).padStart(2,"0")+"</figcaption></figure>").join("")+"</div>":"";
 
     const storyUrl=SITE_ORIGIN+"/story.html?slug="+encodeURIComponent(story.slug);
     const shareUrl=location.href;
-    const storyImage=story.cover_url||SITE_ORIGIN+"/og-image.svg";
+    const storyImage=primaryImage||SITE_ORIGIN+"/og-image.svg";
     const storyDescription=story.excerpt||String(story.body||"").slice(0,180);
 
     updateSocialMeta({
@@ -672,7 +677,7 @@
       title:story.title,
       text:storyDescription,
       url:shareUrl,
-      imageUrl:story.cover_url||null
+      imageUrl:primaryImage||null
     });
 
     // Every story ends with related reading + a quiet contributor earnings CTA.
@@ -1257,6 +1262,22 @@
   }
 
   document.addEventListener("DOMContentLoaded",()=>installImageWatermarks());
+  function initStateForms(){
+    $("[data-state-form]").forEach(form=>{
+      if(form.dataset.stateReady==="1")return;
+      form.dataset.stateReady="1";
+      const steps=$(".state-step",form),dots=$("[data-state-dot]",form),count=$("[data-state-count]",form);
+      let current=0;
+      const paint=()=>{steps.forEach((step,i)=>step.hidden=i!==current);dots.forEach((dot,i)=>dot.classList.toggle("active",i===current));if(count)count.textContent=(current+1)+" / "+steps.length;};
+      form.addEventListener("click",e=>{
+        const next=e.target.closest("[data-state-next]"),back=e.target.closest("[data-state-back]");
+        if(!next&&!back)return;e.preventDefault();
+        if(next){const fields=$("input,textarea,select",steps[current]).filter(el=>!el.disabled&&el.type!=="file");const invalid=fields.find(el=>!el.checkValidity());if(invalid){invalid.reportValidity();return;}if(current<steps.length-1)current++;}
+        else if(current>0)current--;
+        paint();steps[current]?.querySelector("input,textarea,select")?.focus({preventScroll:true});
+      });paint();
+    });
+  }
   const _observeImages=new MutationObserver(()=>installImageWatermarks());
   if(document.body)_observeImages.observe(document.body,{childList:true,subtree:true});
 
@@ -1264,6 +1285,7 @@
     hideSplash();
     initMotion();
     initShell();
+    initStateForms();
 
     try{
       const page=document.body.dataset.page;
