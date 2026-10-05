@@ -196,7 +196,7 @@
       },
 
       async signUp(credentials){
-        const result=await request("/api/auth/signup",{method:"POST",body:JSON.stringify({email:credentials.email,password:credentials.password,name:credentials.options?.data?.display_name||credentials.name||""}),write:true});
+        const result=await request("/api/auth/signup",{method:"POST",body:JSON.stringify({email:credentials.email,password:credentials.password,name:credentials.options?.data?.display_name||credentials.name||"",accepted_terms:!!credentials.accepted_terms,accepted_privacy:!!credentials.accepted_privacy,accepted_community_rules:!!credentials.accepted_community_rules}),write:true});
         return {data:result.data?.user?{user:result.data.user,session:null,verification_required:!!result.data.verification_required}:null,error:result.error||null};
       },
 
@@ -218,6 +218,67 @@
           write:true
         });
         return {data:result.data||null,error:result.error||null};
+      },
+
+
+      async getMyProfile(){
+        return normalize(await request("/api/profile/me"));
+      },
+
+      async updateMyProfile(payload){
+        return normalize(await request("/api/profile/me",{method:"PATCH",body:JSON.stringify(payload),write:true}));
+      },
+
+      async getPublicProfile(username){
+        return normalize(await request("/api/profiles/"+encodeURIComponent(username)));
+      },
+
+      async applyContributor(payload){
+        return normalize(await request("/api/contributors/apply",{method:"POST",body:JSON.stringify(payload),write:true}));
+      },
+
+      async follow(username){
+        return normalize(await request("/api/follows/"+encodeURIComponent(username),{method:"POST",write:true}));
+      },
+
+      async unfollow(username){
+        return normalize(await request("/api/follows/"+encodeURIComponent(username),{method:"DELETE",write:true}));
+      },
+
+      async getFollowing(){
+        return normalize(await request("/api/follows"));
+      },
+
+      async getNotifications(){
+        return normalize(await request("/api/notifications"));
+      },
+
+      async markNotificationsRead(id=null){
+        return normalize(await request("/api/notifications/read",{method:"POST",body:JSON.stringify(id?{id}:{}),write:true}));
+      },
+
+      async getStoryDesk(){
+        return normalize(await request("/api/story-desk"));
+      },
+
+      async claimStory(submissionId){
+        return normalize(await request("/api/story-desk/claim",{method:"POST",body:JSON.stringify({submission_id:submissionId}),write:true}));
+      },
+
+      async workStory(submissionId){
+        return normalize(await request("/api/story-desk/"+encodeURIComponent(submissionId)+"/work",{method:"POST",body:JSON.stringify({}),write:true}));
+      },
+
+      async listApiKeys(){
+        return normalize(await request("/api/api-keys"));
+      },
+
+      async createApiKey(name,scopes){
+        return normalize(await request("/api/api-keys",{method:"POST",body:JSON.stringify({name,scopes}),write:true}));
+      },
+
+      async revokeApiKey(id){
+        return normalize(await request("/api/api-keys/"+encodeURIComponent(id),{method:"DELETE",write:true}));
       },
 
       async signOut(){
