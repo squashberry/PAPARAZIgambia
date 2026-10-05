@@ -338,7 +338,7 @@
     const uploaded=[];
 
     for(let i=0;i<list.length;i++){
-      const file=list[i];
+      const file=await watermarkImageFile(list[i]);
       const path=folder+"/"+crypto.randomUUID()+"-"+safeFilename(file.name);
       const result=await withTimeout(
         supabase.storage.from(bucket).upload(path,file,{
@@ -485,8 +485,39 @@
 
   function coverImage(url,alt="",loading="lazy"){
     return url
-      ?"<img loading='"+loading+"' referrerpolicy='no-referrer' alt='"+esc(alt)+"' src='"+esc(url)+"' onerror=\"this.remove()\">"
-      :"";
+      ? "<span class='pz-media' data-pz-watermark><img loading='"+loading+"' referrerpolicy='no-referrer' alt='"+esc(alt)+"' src='"+esc(url)+"' onerror=\"this.closest('.pz-media')?.remove()\"><span class='pz-watermark' aria-hidden='true'>PAPARAZZI</span></span>"
+      : "";
+  }
+
+  async function watermarkImageFile(file){
+    if(!file || !/^image\//i.test(file.type))return file;
+    try{
+      const bitmap=await createImageBitmap(file);
+      const maxDimension=2400;
+      const scale=Math.min(1,maxDimension/Math.max(bitmap.width,bitmap.height));
+      const canvas=document.createElement("canvas");
+      canvas.width=Math.max(1,Math.round(bitmap.width*scale));
+      canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+      const ctx=canvas.getContext("2d",{alpha:true});
+      ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+      const size=Math.max(18,Math.round(canvas.width*0.022));
+      ctx.save(); ctx.font="900 "+size+"px Arial,sans-serif"; ctx.textAlign="right"; ctx.textBaseline="bottom";
+      ctx.fillStyle="rgba(255,255,255,.86)"; ctx.shadowColor="rgba(0,0,0,.65)"; ctx.shadowBlur=Math.max(2,size*.18);
+      ctx.fillText("PAPARAZZI",canvas.width-size*.55,canvas.height-size*.55); ctx.restore();
+      bitmap.close?.();
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,file.type==="image/png"?"image/png":"image/jpeg",.92));
+      return blob ? new File([blob],file.name,{type:blob.type||file.type,lastModified:Date.now()}) : file;
+    }catch(_){ return file; }
+  }
+
+  function installImageWatermarks(root=document){
+    $$("img:not([data-pz-wrapped])",root).forEach(img=>{
+      if(img.closest(".pz-media")){img.dataset.pzWrapped="true";return;}
+      const wrap=document.createElement("span"); wrap.className="pz-media"; wrap.dataset.pzWatermark="true";
+      img.parentNode?.insertBefore(wrap,img); wrap.appendChild(img);
+      const mark=document.createElement("span"); mark.className="pz-watermark"; mark.setAttribute("aria-hidden","true"); mark.textContent="PAPARAZZI";
+      wrap.appendChild(mark); img.dataset.pzWrapped="true";
+    });
   }
 
   function railItem(story){
@@ -1220,6 +1251,10 @@
       }
     });
   }
+
+  document.addEventListener("DOMContentLoaded",()=>installImageWatermarks());
+  const _observeImages=new MutationObserver(()=>installImageWatermarks());
+  if(document.body)_observeImages.observe(document.body,{childList:true,subtree:true});
 
   document.addEventListener("DOMContentLoaded",async()=>{
     hideSplash();
