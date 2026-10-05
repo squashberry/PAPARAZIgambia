@@ -644,12 +644,20 @@
 
     const tabs=$$(".switcher button");
     const setMode=mode=>{
-      tabs.forEach(button=>button.classList.toggle("active",button.dataset.mode===mode));
-      signIn.style.display=mode==="signin"?"":"none";
-      signUp.style.display=mode==="signup"?"":"none";
+      const signin=mode==="signin";
+      tabs.forEach(button=>{
+        const active=button.dataset.mode===mode;
+        button.classList.toggle("active",active);
+        button.setAttribute("aria-selected",String(active));
+      });
+      signIn.style.display=signin?"":"none";
+      signUp.style.display=signin?"none":"";
     };
 
-    tabs.forEach(button=>button.addEventListener("click",()=>setMode(button.dataset.mode)));
+    tabs.forEach(button=>button.addEventListener("click",event=>{
+      event.preventDefault();
+      setMode(button.dataset.mode);
+    }));
     setMode("signin");
 
     if(!supabase){
