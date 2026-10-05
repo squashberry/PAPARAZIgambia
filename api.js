@@ -222,6 +222,14 @@
 
 
 
+      async getArticles({authorId=null,status="published",limit=50}={}){
+        const q=new URLSearchParams();
+        if(authorId)q.set("author_id",authorId);
+        if(status)q.set("status",status);
+        q.set("limit",String(limit));
+        return normalize(await request("/api/articles?"+q.toString()));
+      },
+
       async updateArticle(id,payload){
         return normalize(await request("/api/articles/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify(payload),write:true}));
       },
