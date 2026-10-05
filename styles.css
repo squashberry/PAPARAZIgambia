@@ -74,3 +74,34 @@ main{min-height:70vh}.container{max-width:1280px;margin:auto;padding:0 24px}.her
 
 .share-mini{border:1px solid rgba(12,12,12,.18);background:transparent;border-radius:999px;padding:8px 12px;margin-top:11px;font-size:.69rem;font-weight:900;letter-spacing:.03em;cursor:pointer;width:max-content}.share-mini:hover{background:#fff;transform:translateY(-1px)}
 @media(max-width:720px){.share-mini{width:100%;justify-content:center}}
+
+/* PAPARAZZI motion system */
+html.motion-ready{scroll-behavior:smooth}
+body{opacity:1;transition:opacity .28s ease,transform .45s cubic-bezier(.22,1,.36,1)}
+body.page-ready{animation:pageEnter .65s cubic-bezier(.22,1,.36,1) both}
+@keyframes pageEnter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+[data-reveal]{opacity:0;transform:translateY(26px) scale(.985);filter:blur(5px);transition:opacity .75s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms),transform .75s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms),filter .75s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms)}
+[data-reveal].is-visible{opacity:1;transform:none;filter:none}
+.lead-story,.hero-rail,.panel,.desk-grid,.tip-banner-inner{transition:transform .55s cubic-bezier(.22,1,.36,1),box-shadow .55s ease,border-color .35s ease}
+.lead-story:hover{transform:translateY(-5px);box-shadow:0 30px 70px rgba(0,0,0,.12)}
+.hero-rail:hover{transform:translateY(-4px)}
+.story-hit .lead-visual,.rail-thumb,.latest-thumb,.story-cover{transition:transform .8s cubic-bezier(.22,1,.36,1),filter .5s ease}
+.story-hit:hover .lead-visual{transform:scale(1.035)}
+.rail-item:hover .rail-thumb,.latest-item:hover .latest-thumb{transform:scale(1.035)}
+.story-card-art img,.lead-visual img,.rail-thumb img,.latest-thumb img,.story-cover img{transition:transform 1s cubic-bezier(.22,1,.36,1),filter .8s ease}
+.story-card:hover .story-card-art img,.story-hit:hover .lead-visual img,.rail-item:hover .rail-thumb img,.latest-item:hover .latest-thumb img{transform:scale(1.06)}
+.btn,.nav a,.menu-btn,.beat-links a,.share-mini,.file-picker{transition:transform .22s cubic-bezier(.22,1,.36,1),background .22s ease,border-color .22s ease,box-shadow .22s ease}
+.btn:active,.nav a:active,.share-mini:active{transform:scale(.97)}
+.brand-mark{transition:transform .35s cubic-bezier(.22,1,.36,1),border-radius .35s ease}.brand:hover .brand-mark{transform:rotate(-5deg) scale(1.06);border-radius:15px}
+.nav a:hover{transform:translateY(-1px)}
+.hero-sign span{animation:softFloat 4.5s ease-in-out infinite}@keyframes softFloat{50%{transform:translateY(-5px)}}
+.ticker-track{animation:tickerDrift 18s linear infinite}@keyframes tickerDrift{0%{transform:translateX(0)}100%{transform:translateX(-3.5%)}}
+.splash-inner{animation:splashIntro .9s cubic-bezier(.22,1,.36,1) both}.splash-flash{animation:splashPulse 1.5s ease-in-out infinite}@keyframes splashIntro{from{opacity:0;transform:scale(.88) translateY(12px);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}@keyframes splashPulse{50%{transform:scale(1.08);box-shadow:0 0 80px rgba(255,255,255,.12)}}
+.story-reader-head h1{animation:titleReveal .9s .08s cubic-bezier(.22,1,.36,1) both}@keyframes titleReveal{from{opacity:0;transform:translateY(18px);letter-spacing:-.02em}to{opacity:1;transform:none}}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.45s;animation-timing-function:cubic-bezier(.22,1,.36,1)}
+::view-transition-old(root){animation-name:morphOut}::view-transition-new(root){animation-name:morphIn}@keyframes morphOut{to{opacity:0;transform:scale(.985);filter:blur(3px)}}@keyframes morphIn{from{opacity:0;transform:translateY(12px) scale(.985);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+.switcher{position:relative}.switcher button{transition:color .2s ease,background .28s cubic-bezier(.22,1,.36,1),transform .2s ease}.switcher button:hover{transform:translateY(-1px)}.switcher button.active{box-shadow:0 4px 14px rgba(0,0,0,.12)}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  [data-reveal]{opacity:1!important;transform:none!important;filter:none!important}
+}
