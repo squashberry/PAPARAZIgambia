@@ -368,17 +368,34 @@
   function renderNav(session,profile){
     const account=$("#nav-account");
     const mobileAccount=$("#mobile-account");
+    const signout=$("#nav-signout");
+    const mobileSignout=$("#mobile-signout");
     const bell=$("#nav-notifications");
     const mobileBell=$("#mobile-notifications");
     const displayName=String(profile?.display_name||session?.user?.email?.split("@")?.[0]||"ACCOUNT").trim();
     const label=displayName.length>18?displayName.slice(0,17)+"…":displayName;
+    const doSignOut=async(button)=>{
+      if(button)button.disabled=true;
+      try{
+        const result=await supabase?.auth?.signOut();
+        if(result?.error)throw new Error(result.error.message||"Unable to sign out.");
+        location.replace("index.html");
+      }catch(error){
+        toast(error?.message||"Unable to sign out.","error");
+        if(button)button.disabled=false;
+      }
+    };
     if(session){
       if(account){account.textContent=label;account.title=displayName;account.href=profile?.username?"author.html?u="+encodeURIComponent(profile.username):"index.html#your-paparazzi";}
       if(mobileAccount){mobileAccount.textContent=displayName;mobileAccount.href=profile?.username?"author.html?u="+encodeURIComponent(profile.username):"index.html#your-paparazzi";}
+      [signout,mobileSignout].forEach(button=>{
+        if(button){button.hidden=false;button.disabled=false;button.onclick=()=>doSignOut(button);}
+      });
       [bell,mobileBell].forEach(el=>{if(el){el.hidden=false;el.textContent="NOTIFICATIONS";el.href="notifications.html";}});
     }else{
       if(account){account.textContent="SIGN IN";account.href="join.html";account.title="Sign in";}
       if(mobileAccount){mobileAccount.textContent="Sign in";mobileAccount.href="join.html";}
+      [signout,mobileSignout].forEach(button=>{if(button){button.hidden=true;button.disabled=false;button.onclick=null;}});
       [bell,mobileBell].forEach(el=>{if(el)el.hidden=true;});
     }
   }
@@ -747,6 +764,15 @@
   }
 
   async function initJoin(){
+    const existingSession=await currentSession();
+    if(existingSession){
+      const existingProfile=await ensureProfile(existingSession.user);
+      const target=existingProfile?.username
+        ? "author.html?u="+encodeURIComponent(existingProfile.username)
+        : "index.html#your-paparazzi";
+      location.replace(target);
+      return;
+    }
     const requestedNext=new URLSearchParams(location.search).get("next");
     const authNext=(requestedNext&&/^[a-z0-9._/-]+(?:\?[a-z0-9_=&%.-]+)?$/i.test(requestedNext)&&!requestedNext.includes("//"))?requestedNext:null;
     const signIn=$("#sign-in-form"),signUp=$("#sign-up-form"),verifyPanel=$("#verification-panel");
