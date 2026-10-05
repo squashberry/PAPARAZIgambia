@@ -632,7 +632,12 @@
 
     const author=story.paparazi_profiles||story.author||{};
     const body=String(story.body||"").split(/\n\s*\n/).map(p=>"<p>"+esc(p).replace(/\n/g,"<br>")+"</p>").join("");
-    const media=Array.isArray(story.media_urls)?story.media_urls:(typeof story.media_urls==="string"?(()=>{try{return JSON.parse(story.media_urls)||[]}catch(_){return[]}})():[]);\n    const mediaUrls=media.map(x=>typeof x==="string"?x:x?.url).filter(Boolean);\n    const imageUrl=story.cover_url||mediaUrls[0]||"";\n    const image=imageUrl?coverImage(imageUrl,story.title,"eager"):"";\n    const galleryUrls=[imageUrl,...mediaUrls.filter(x=>x!==imageUrl)].filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i);\n    const gallery=galleryUrls.length>1?"<section class=\"story-gallery\" aria-label=\"Story images\">"+galleryUrls.map((url,i)=>"<figure class=\"story-gallery-item\">"+coverImage(url,story.title+(i?" image "+(i+1):""))+"<button type=\"button\" class=\"image-download\" data-download-image=\""+esc(url)+"\" data-download-name=\""+esc(slugify(story.title)+"-"+(i+1))+"\">Download image ↓</button></figure>").join("")+"</section>":"";
+    const media=Array.isArray(story.media_urls)?story.media_urls:(typeof story.media_urls==="string"?(()=>{try{return JSON.parse(story.media_urls)||[]}catch(_){return[]}})():[]);
+    const mediaUrls=media.map(x=>typeof x==="string"?x:x?.url).filter(Boolean);
+    const imageUrl=story.cover_url||mediaUrls[0]||"";
+    const image=imageUrl?coverImage(imageUrl,story.title,"eager"):"";
+    const galleryUrls=[imageUrl,...mediaUrls.filter(x=>x!==imageUrl)].filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i);
+    const gallery=galleryUrls.length>1?"<section class=\"story-gallery\" aria-label=\"Story images\">"+galleryUrls.map((url,i)=>"<figure class=\"story-gallery-item\">"+coverImage(url,story.title+(i?" image "+(i+1):""))+"<button type=\"button\" class=\"image-download\" data-download-image=\""+esc(url)+"\" data-download-name=\""+esc(slugify(story.title)+"-"+(i+1))+"\">Download image ↓</button></figure>").join("")+"</section>":"";
 
     const storyUrl=SITE_ORIGIN+"/story.html?slug="+encodeURIComponent(story.slug);
     const shareUrl=location.href;
@@ -667,7 +672,21 @@
       +"<a class='btn btn-ghost' href='index.html#latest'>← Back to latest</a>"
       +"<a class='btn btn-ghost' href='submit.html'>Send a tip →</a></div></div>";
 
-    $(".image-download").forEach(button=>button.addEventListener("click",async()=>{\n      const url=button.dataset.downloadImage;\n      try{\n        const response=await fetch(url,{mode:"cors"});\n        if(!response.ok)throw new Error("Image unavailable");\n        const blob=await response.blob();\n        const bitmap=await createImageBitmap(blob);\n        const canvas=document.createElement("canvas"); canvas.width=bitmap.width; canvas.height=bitmap.height;\n        const ctx=canvas.getContext("2d"); ctx.drawImage(bitmap,0,0);\n        const size=Math.max(22,Math.round(canvas.width*.022)); ctx.save(); ctx.font="900 "+size+"px Arial,sans-serif"; ctx.textAlign="right"; ctx.textBaseline="bottom"; ctx.fillStyle="rgba(255,255,255,.9)"; ctx.shadowColor="rgba(0,0,0,.7)"; ctx.shadowBlur=Math.max(3,size*.18); ctx.fillText("PAPARAZZI",canvas.width-size*.55,canvas.height-size*.55); ctx.restore(); bitmap.close?.();\n        const out=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",.94));\n        const a=document.createElement("a"); a.href=URL.createObjectURL(out||blob); a.download=(button.dataset.downloadName||"paparazzi-image")+".jpg"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);\n      }catch(_){window.open(url,"_blank","noopener"); toast("We couldn't stamp the image locally. The original was opened instead.","error");}\n    }));\n\n    const shareStory=$("#share-story");
+    $(".image-download").forEach(button=>button.addEventListener("click",async()=>{
+      const url=button.dataset.downloadImage;
+      try{
+        const response=await fetch(url,{mode:"cors"});
+        if(!response.ok)throw new Error("Image unavailable");
+        const blob=await response.blob();
+        const bitmap=await createImageBitmap(blob);
+        const canvas=document.createElement("canvas"); canvas.width=bitmap.width; canvas.height=bitmap.height;
+        const ctx=canvas.getContext("2d"); ctx.drawImage(bitmap,0,0);
+        const size=Math.max(22,Math.round(canvas.width*.022)); ctx.save(); ctx.font="900 "+size+"px Arial,sans-serif"; ctx.textAlign="right"; ctx.textBaseline="bottom"; ctx.fillStyle="rgba(255,255,255,.9)"; ctx.shadowColor="rgba(0,0,0,.7)"; ctx.shadowBlur=Math.max(3,size*.18); ctx.fillText("PAPARAZZI",canvas.width-size*.55,canvas.height-size*.55); ctx.restore(); bitmap.close?.();
+        const out=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",.94));
+        const a=document.createElement("a"); a.href=URL.createObjectURL(out||blob); a.download=(button.dataset.downloadName||"paparazzi-image")+".jpg"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+      }catch(_){window.open(url,"_blank","noopener"); toast("We couldn't stamp the image locally. The original was opened instead.","error");}
+    }));\n
+    const shareStory=$("#share-story");
     if(shareStory)shareStory.onclick=()=>shareContent({
       title:story.title,
       text:storyDescription,
