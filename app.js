@@ -65,10 +65,19 @@
     el.className="status-box show "+(kind==="error"?"error":kind==="ok"?"ok":"");
   }
 
+  function storyHref(story){
+    if(story?._starter)return "stories/"+encodeURIComponent(story.slug)+".html";
+    return "story.html?slug="+encodeURIComponent(story.slug);
+  }
+
   function initMotion(){
     document.documentElement.classList.add("motion-ready");
 
-    const revealables=$("[data-reveal]");
+    $$(".hero-intro, .editorial-hero, .beat-strip .container, .latest-head, .latest-item, .desk-grid, .tip-banner-inner, .page-head, .panel, .story-reader-head, .story-cover, .story-body, .author-box, .story-next").forEach(el=>{
+      el.setAttribute("data-reveal","");
+    });
+
+    const revealables=$$("[data-reveal]");
     if("IntersectionObserver" in window){
       const observer=new IntersectionObserver(entries=>{
         entries.forEach(entry=>{
@@ -78,6 +87,7 @@
           }
         });
       },{threshold:0.08,rootMargin:"0px 0px -7% 0px"});
+
       revealables.forEach((el,index)=>{
         el.style.setProperty("--reveal-delay",String(Math.min(index*45,280))+"ms");
         observer.observe(el);
@@ -86,7 +96,7 @@
       revealables.forEach(el=>el.classList.add("is-visible"));
     }
 
-    $("a[data-morph], .story-hit, .rail-item, .latest-item, .beat-links a, .brand").forEach(el=>{
+    $$("a[data-morph], .story-hit, .rail-item, .latest-item, .beat-links a, .brand").forEach(el=>{
       el.addEventListener("click",event=>{
         const href=el.getAttribute("href");
         if(!href||href.startsWith("#")||href.startsWith("mailto:")||el.target==="_blank")return;
@@ -477,7 +487,7 @@
 
   function railItem(story){
     const author=story.paparazi_profiles?.display_name||story.author?.display_name||"PAPARAZZI🇬🇲";
-    return "<a class='rail-item' href='story.html?slug="+encodeURIComponent(story.slug)+"'>"
+    return "<a class='rail-item' data-morph href='"+storyHref(story)+"'>"
       +"<div class='rail-thumb'>"+coverImage(story.cover_url,story.title)+"</div>"
       +"<div><div class='kicker'>"+esc(story.category||"Story")+"</div>"
       +"<h3>"+esc(story.title)+"</h3>"
@@ -487,7 +497,7 @@
   function latestItem(story,index){
     const author=story.paparazi_profiles?.display_name||story.author?.display_name||"PAPARAZZI🇬🇲";
     const variant=[""," alt-a"," alt-b"," alt-c"][index%4];
-    return "<a class='latest-item' href='story.html?slug="+encodeURIComponent(story.slug)+"'>"
+    return "<a class='latest-item' data-morph href='"+storyHref(story)+"'>"
       +"<span class='latest-index'>"+String(index+1).padStart(2,"0")+"</span>"
       +"<div class='latest-thumb"+variant+"'>"+coverImage(story.cover_url,story.title)+"</div>"
       +"<div class='latest-info'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
@@ -520,6 +530,7 @@
     const usingStarter=!result.data.length;
     const stories=(result.data.length?result.data:starterStories).map((item,index)=>({
       ...item,
+      _starter:usingStarter,
       published_at:item.published_at||new Date(Date.now()-(index*86400000)).toISOString(),
       created_at:item.created_at||new Date(Date.now()-(index*86400000)).toISOString(),
       paparazi_profiles:item.paparazi_profiles||item.author
@@ -531,7 +542,7 @@
     $("#lead-excerpt").textContent=featured.excerpt||"";
     $("#lead-meta").innerHTML="<strong>"+esc(featured.paparazi_profiles?.display_name||"PAPARAZZI🇬🇲")
       +"</strong><span>•</span><span>"+fmtDate(featured.published_at||featured.created_at)+"</span>";
-    $("#lead-link").href="story.html?slug="+encodeURIComponent(featured.slug);
+    $("#lead-link").href=storyHref(featured);
 
     const visual=$("#lead-visual");
     visual.classList.toggle("has-image",Boolean(featured.cover_url));
