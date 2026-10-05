@@ -266,6 +266,14 @@
         return normalize(await request("/api/follows"));
       },
 
+      async getNotificationPreferences(){
+        return normalize(await request("/api/notification-preferences"));
+      },
+
+      async updateNotificationPreferences(payload){
+        return normalize(await request("/api/notification-preferences",{method:"PATCH",body:JSON.stringify(payload),write:true}));
+      },
+
       async getNotifications(){
         return normalize(await request("/api/notifications"));
       },
