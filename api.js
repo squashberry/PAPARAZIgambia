@@ -196,29 +196,19 @@
       },
 
       async signUp(credentials){
-        const result=await request("/api/auth/signup",{
-          method:"POST",
-          body:JSON.stringify({
-            email:credentials.email,
-            password:credentials.password,
-            name:credentials.options?.data?.display_name || credentials.name || ""
-          }),
-          write:true
-        });
-        if(result.error){
-          return {
-            data:result.data?.user?{user:result.data.user,session:null}:null,
-            error:result.error
-          };
-        }
-        dispatchAuth();
-        return {
-          data:{
-            user:result.data?.user||null,
-            session:result.data?.session?{}:null
-          },
-          error:null
-        };
+        const result=await request("/api/auth/signup",{method:"POST",body:JSON.stringify({email:credentials.email,password:credentials.password,name:credentials.options?.data?.display_name||credentials.name||""}),write:true});
+        return {data:result.data?.user?{user:result.data.user,session:null,verification_required:!!result.data.verification_required}:null,error:result.error||null};
+      },
+
+      async verifyEmailCode({email,code}){
+        const result=await request("/api/auth/verify-email",{method:"POST",body:JSON.stringify({email,code}),write:true});
+        if(!result.error)dispatchAuth();
+        return {data:result.data?.user?{user:result.data.user,session:result.data.session?{}:null}:null,error:result.error||null};
+      },
+
+      async resendVerificationCode(email){
+        const result=await request("/api/auth/resend-verification",{method:"POST",body:JSON.stringify({email}),write:true});
+        return {data:result.data||null,error:result.error||null};
       },
 
       async resetPasswordForEmail(email){
