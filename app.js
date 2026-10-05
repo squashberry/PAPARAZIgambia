@@ -445,7 +445,8 @@
       category:"Inside PAPARAZZI",
       excerpt:"Tips come in fast. We slow down long enough to check the story, add context and decide what is worth publishing.",
       body:"PAPARAZZI is built for the moments people actually talk about. Community tips are reviewed before publication, and contributors publish under their own byline.",
-      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"}
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+      cover_url:"https://images.unsplash.com/photo-1492684223066-81342ee5ff71?auto=format&fit=crop&w=1200&q=85"
     },
     {
       slug:"become-a-paparazzi",
@@ -453,7 +454,8 @@
       category:"Community",
       excerpt:"Create an account, become a PAPARAZZI contributor and publish stories from the places you know best.",
       body:"The newsroom works better when the people closest to the story can tell it.",
-      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"}
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+      cover_url:"https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=1200&q=85"
     },
     {
       slug:"send-a-tip",
