@@ -137,7 +137,12 @@ jobs:
               if(text.includes('PAPARAZZI-GENERATED-STORY')) fs.unlinkSync(full);
             }
 
-            const urls=[];
+            const urls=[
+              {url:SITE+'/stories/welcome-to-paparazzi.html'},
+              {url:SITE+'/stories/how-paparazzi-works.html'},
+              {url:SITE+'/stories/become-a-paparazzi.html'},
+              {url:SITE+'/stories/send-a-tip.html'}
+            ];
             for(const row of rows){
               const slug=safeSlug(row.slug);
               fs.writeFileSync(path.join(storyDir,slug+'.html'),storyHtml(row));
@@ -155,11 +160,12 @@ jobs:
               +'\n</urlset>\n';
             fs.writeFileSync('sitemap-stories.xml',sitemap);
 
-            const feedItems=rows.slice(0,30).map(row=>{
+            const seedFeed='<item><title>Welcome to PAPARAZZI🇬🇲</title><link>'+SITE+'/stories/welcome-to-paparazzi.html</link><guid isPermaLink="true">'+SITE+'/stories/welcome-to-paparazzi.html</guid><description>A new home for the people, places, parties and moments that make The Gambia impossible to ignore.</description><category>Inside PAPARAZZI</category></item>';
+            const feedItems=rows.length?rows.slice(0,30).map(row=>{
               const slug=safeSlug(row.slug);
               const url=SITE+'/stories/'+encodeURIComponent(slug)+'.html';
               return '<item><title>'+escXml(row.title)+'</title><link>'+escXml(url)+'</link><guid isPermaLink="true">'+escXml(url)+'</guid><description>'+escXml(row.excerpt||String(row.body||'').slice(0,180))+'</description><pubDate>'+new Date(row.published_at||row.created_at).toUTCString()+'</pubDate><category>'+escXml(row.category||'Story')+'</category></item>';
-            }).join('\n');
+            }).join('\n') : seedFeed;
             const feed='<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>PAPARAZZI🇬🇲</title><link>'+SITE+'/</link><description>The Gambia\'s people-powered social, entertainment, culture, nightlife and style newsroom.</description><language>en-gm</language><image><url>'+SITE+'/og-image.svg</url><title>PAPARAZZI🇬🇲</title><link>'+SITE+'/</link></image>'+feedItems+'</channel></rss>\n';
             fs.writeFileSync('feed.xml',feed);
 
