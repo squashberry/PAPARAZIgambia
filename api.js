@@ -221,6 +221,15 @@
       },
 
 
+
+      async updateArticle(id,payload){
+        return normalize(await request("/api/articles/"+encodeURIComponent(id),{method:"PATCH",body:JSON.stringify(payload),write:true}));
+      },
+
+      async getMyArticles(){
+        return normalize(await request("/api/articles?author_id=me&status=all&limit=50"));
+      },
+
       async getMyProfile(){
         return normalize(await request("/api/profile/me"));
       },
