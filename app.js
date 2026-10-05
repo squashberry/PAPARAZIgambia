@@ -434,7 +434,8 @@
     category:"Inside PAPARAZZI",
     excerpt:"A new home for the people, places, parties and moments that make The Gambia impossible to ignore.",
     body:"The brief was simple: make a place that feels like The Gambia, not a recycled media template with a flag pasted on top.\n\nPAPARAZZI is built around the moments people actually talk about — the entrance nobody expected, the outfit everybody noticed, the street corner where a story starts, the event that had everybody outside.\n\nThe newsroom will mix staff-written stories with contributions from the community. Anyone can send a tip. Registered readers can become PAPARAZZI contributors and publish their own stories.\n\nThe rule is equally simple: be interesting, be accurate, and don't publish somebody else's private life just because you can.\n\nThis is the first page. The rest will be written with you.",
-    author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"}
+    author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+    cover_url:"https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=85"
   };
 
   const starterStories=[
@@ -463,7 +464,8 @@
       category:"Tip line",
       excerpt:"A photo, a lead, a rumour worth checking or a detail everyone else missed can start a story.",
       body:"Anonymous tips are welcome. We review submissions before anything reaches the front page.",
-      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"}
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+      cover_url:"https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=85"
     }
   ];
 
