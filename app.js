@@ -9,7 +9,16 @@
   window.PAPARAZI={supabase:supabase};
 
   const $=(s,r=document)=>r.querySelector(s);
-  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const $=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const emergencyHideSplash=()=>{
+    const splash=$(".splash");
+    if(!splash)return;
+    splash.classList.add("is-hidden");
+    splash.style.opacity="0";
+    splash.style.visibility="hidden";
+    splash.style.pointerEvents="none";
+  };
+  setTimeout(emergencyHideSplash,1600);
 
   const esc=(value)=>{
     const map={"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"};
@@ -375,7 +384,9 @@
   }
 
   document.addEventListener("DOMContentLoaded",async()=>{
+    emergencyHideSplash();
     try{
+      
       await initShell();
       const page=document.body.dataset.page;
       if(page==="home")await initHome();
