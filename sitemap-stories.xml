@@ -16,4 +16,8 @@
     <loc>https://squashberry.github.io/PAPARAZZIgambia/story.html?slug=send-a-tip</loc>
     <priority>0.5</priority>
   </url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/stories/welcome-to-paparazzi.html</loc><priority>0.6</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/stories/how-paparazzi-works.html</loc><priority>0.6</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/stories/become-a-paparazzi.html</loc><priority>0.6</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/stories/send-a-tip.html</loc><priority>0.6</priority></url>
 </urlset>
