@@ -115,6 +115,88 @@
     }
   }
 
+  const MEDIA_BUCKET="paparazzi-media";
+  const MAX_FILE_BYTES=50*1024*1024;
+  const MEDIA_TYPES=/^(image|video)\\//i;
+
+  function fileSize(bytes){
+    if(bytes<1024*1024)return Math.max(1,Math.round(bytes/1024))+" KB";
+    return (bytes/(1024*1024)).toFixed(1)+" MB";
+  }
+
+  function safeFilename(name){
+    return String(name||"file")
+      .normalize("NFKD")
+      .replace(/[^a-zA-Z0-9._-]+/g,"-")
+      .replace(/-+/g,"-")
+      .replace(/^-|-$/g,"")
+      .slice(0,90)||"file";
+  }
+
+  function validateMediaFiles(files,maxCount){
+    const list=Array.from(files||[]);
+    if(list.length>maxCount)return "Choose up to "+maxCount+" files.";
+    const invalid=list.find(file=>!MEDIA_TYPES.test(file.type));
+    if(invalid)return invalid.name+" is not an image or video file.";
+    const oversized=list.find(file=>file.size>MAX_FILE_BYTES);
+    if(oversized)return oversized.name+" is larger than 50 MB.";
+    return null;
+  }
+
+  function renderSelectedFiles(input,listId,maxCount){
+    const list=$(listId);
+    if(!list||!input)return;
+    const files=Array.from(input.files||[]);
+    const error=validateMediaFiles(files,maxCount);
+    if(error){
+      input.value="";
+      list.innerHTML="<div class='upload-error'>"+esc(error)+"</div>";
+      return;
+    }
+    list.innerHTML=files.map((file,index)=>
+      "<div class='upload-item'><span class='upload-index'>"+String(index+1).padStart(2,"0")+"</span><div><strong>"+esc(file.name)+"</strong><small>"+esc(file.type||"media")+" · "+fileSize(file.size)+"</small></div></div>"
+    ).join("");
+  }
+
+  async function uploadMediaFiles(files,folder,onProgress){
+    if(!supabase)throw new Error("Media storage is temporarily unavailable.");
+    const list=Array.from(files||[]);
+    const error=validateMediaFiles(list,20);
+    if(error)throw new Error(error);
+    const uploaded=[];
+
+    for(let i=0;i<list.length;i++){
+      const file=list[i];
+      const path=folder+"/"+crypto.randomUUID()+"-"+safeFilename(file.name);
+      const result=await withTimeout(
+        supabase.storage.from(MEDIA_BUCKET).upload(path,file,{
+          cacheControl:"3600",
+          contentType:file.type,
+          upsert:false
+        }),
+        90000,
+        {error:{message:"The upload timed out. Please try again."}}
+      );
+      if(result?.error)throw new Error(result.error.message||"Upload failed.");
+
+      const publicResult=supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+      const publicUrl=publicResult?.data?.publicUrl;
+      if(!publicUrl)throw new Error("The uploaded file did not receive a public URL.");
+
+      uploaded.push({
+        url:publicUrl,
+        path,
+        name:file.name,
+        type:file.type,
+        size:file.size
+      });
+
+      if(onProgress)onProgress(i+1,list.length,file);
+    }
+
+    return uploaded;
+  }
+
   function renderNav(session,profile){
     const account=$("#nav-account");
     if(!account)return;
@@ -486,6 +568,11 @@
     $("#studio-avatar").textContent=initials(profile?.display_name||user.email||"P");
     $("#paparazzi-status").textContent=profile?.is_paparazzi?"PAPARAZZI contributor":"Reader";
 
+    const coverInput=$("#article-cover");
+    if(coverInput){
+      coverInput.addEventListener("change",()=>renderSelectedFiles(coverInput,"#article-cover-list",1));
+    }
+
     const joinBtn=$("#become-paparazzi");
     if(joinBtn){
       joinBtn.textContent=profile?.is_paparazzi?"You're a PAPARAZZI ✓":"Become a PAPARAZZI";
@@ -521,37 +608,81 @@
       const category=$("#article-category").value;
       const excerpt=$("#article-excerpt").value.trim();
       const body=$("#article-body").value.trim();
-      const cover=$("#article-cover").value.trim()||null;
+      const coverFile=coverInput?.files?.[0]||null;
 
       if(body.length<20){
         toast("Give the story a little more room to breathe.","error");
         return;
       }
 
+      if(coverFile){
+        const coverError=validateMediaFiles([coverFile],1);
+        if(coverError){
+          toast(coverError,"error");
+          return;
+        }
+        if(!/^image\\//i.test(coverFile.type)){
+          toast("The cover must be an image file.","error");
+          return;
+        }
+      }
+
       let slug=slugify(title)||"story";
       const duplicate=await supabase.from("paparazi_articles").select("id").eq("slug",slug).maybeSingle();
       if(duplicate.data)slug=slug+"-"+Math.random().toString(36).slice(2,7);
 
-      const result=await supabase.from("paparazi_articles").insert({
-        author_id:user.id,
-        title,
-        slug,
-        excerpt,
-        body,
-        cover_url:cover,
-        category,
-        status:"published",
-        published_at:new Date().toISOString()
-      });
-
-      if(result.error){
-        toast(result.error.message,"error");
-        return;
+      const articleId=crypto.randomUUID();
+      const publishButton=form.querySelector("button[type='submit'],button.btn-dark");
+      const originalText=publishButton?.textContent||"Publish story →";
+      if(publishButton){
+        publishButton.disabled=true;
+        publishButton.textContent=coverFile?"Uploading cover…":"Publishing…";
       }
 
-      form.reset();
-      toast("Published. Now go tell the timeline.");
-      loadMyArticles(user.id);
+      try{
+        let media=[];
+        let coverUrl=null;
+
+        if(coverFile){
+          media=await uploadMediaFiles([coverFile],"stories/"+user.id+"/"+articleId,(done)=>{
+            if(publishButton)publishButton.textContent=done===1?"Uploading cover…":"Uploading…";
+          });
+          coverUrl=media[0]?.url||null;
+        }
+
+        const result=await supabase.from("paparazi_articles").insert({
+          id:articleId,
+          author_id:user.id,
+          title,
+          slug,
+          excerpt,
+          body,
+          cover_url:coverUrl,
+          media_urls:media,
+          category,
+          status:"published",
+          published_at:new Date().toISOString()
+        });
+
+        if(result.error){
+          toast(result.error.message,"error");
+          return;
+        }
+
+        form.reset();
+        const coverList=$("#article-cover-list");
+        if(coverList)coverList.innerHTML="";
+        toast("Published. Now go tell the timeline.");
+        loadMyArticles(user.id);
+      }catch(error){
+        console.error("PAPARAZZI story media upload:",error);
+        toast(error.message||"We couldn't upload the cover image. Try again.","error");
+      }finally{
+        if(publishButton){
+          publishButton.disabled=false;
+          publishButton.textContent=originalText;
+        }
+      }
     });
 
     loadMyArticles(user.id);
@@ -563,11 +694,17 @@
 
     const anonymous=$("#tip-anonymous");
     const identity=$("#tip-identity");
+    const mediaInput=$("#tip-media");
+    const mediaList=$("#tip-media-list");
     if(!anonymous||!identity)return;
 
     const sync=()=>identity.style.display=anonymous.checked?"none":"grid";
     anonymous.addEventListener("change",sync);
     sync();
+
+    if(mediaInput){
+      mediaInput.addEventListener("change",()=>renderSelectedFiles(mediaInput,"#tip-media-list",20));
+    }
 
     form.addEventListener("submit",async e=>{
       e.preventDefault();
@@ -578,41 +715,75 @@
         return;
       }
 
-      const payload={
-        submitter_user_id:anonymous.checked?null:((await currentSession())?.user?.id||null),
-        is_anonymous:anonymous.checked,
-        submitter_name:anonymous.checked?null:$("#tip-name").value.trim(),
-        submitter_email:anonymous.checked?null:$("#tip-email").value.trim(),
-        category:$("#tip-category").value,
-        title:$("#tip-title").value.trim()||null,
-        story:$("#tip-story").value.trim(),
-        location:$("#tip-location").value.trim()||null,
-        media_url:$("#tip-media").value.trim()||null
-      };
-
-      if(payload.story.length<10){
-        setStatus($("#tip-status"),"Tell us what happened first.","error");
+      const files=Array.from(mediaInput?.files||[]);
+      const mediaError=validateMediaFiles(files,20);
+      if(mediaError){
+        setStatus($("#tip-status"),mediaError,"error");
         return;
       }
 
-      const result=await withTimeout(
-        supabase.from("paparazi_submissions").insert(payload).select("id").single(),
-        8000,
-        {error:{message:"The tip line took too long to respond. Try again."}}
-      );
-
-      if(result?.error){
-        setStatus($("#tip-status"),result.error.message,"error");
-        return;
+      const submitId=crypto.randomUUID();
+      const submitButton=form.querySelector("button[type='submit'],button.btn-dark");
+      const originalText=submitButton?.textContent||"Send tip privately →";
+      if(submitButton){
+        submitButton.disabled=true;
+        submitButton.textContent=files.length?"Uploading media…":"Sending tip…";
       }
 
-      form.reset();
-      anonymous.checked=true;
-      sync();
-      setStatus($("#tip-status"),
-        "Tip received. Keep this reference: "+(result?.data?.id?String(result.data.id).slice(0,8).toUpperCase():"RECEIVED")+".",
-        "ok"
-      );
+      try{
+        let media=[];
+        if(files.length){
+          media=await uploadMediaFiles(files,"tips/"+submitId,(done,total)=>{
+            if(submitButton)submitButton.textContent="Uploading "+done+" of "+total+"…";
+          });
+        }
+
+        const payload={
+          id:submitId,
+          submitter_user_id:anonymous.checked?null:((await currentSession())?.user?.id||null),
+          is_anonymous:anonymous.checked,
+          submitter_name:anonymous.checked?null:$("#tip-name").value.trim(),
+          submitter_email:anonymous.checked?null:$("#tip-email").value.trim(),
+          category:$("#tip-category").value,
+          title:$("#tip-title").value.trim()||null,
+          story:$("#tip-story").value.trim(),
+          location:$("#tip-location").value.trim()||null,
+          media_urls:media
+        };
+
+        if(payload.story.length<10){
+          setStatus($("#tip-status"),"Tell us what happened first.","error");
+          return;
+        }
+
+        const result=await withTimeout(
+          supabase.from("paparazi_submissions").insert(payload).select("id").single(),
+          8000,
+          {error:{message:"The tip line took too long to respond. Try again."}}
+        );
+
+        if(result?.error){
+          setStatus($("#tip-status"),result.error.message,"error");
+          return;
+        }
+
+        form.reset();
+        if(mediaList)mediaList.innerHTML="";
+        anonymous.checked=true;
+        sync();
+        setStatus($("#tip-status"),
+          "Tip received"+(media.length?" with "+media.length+" media file"+(media.length===1?"":"s"):"")+". Keep this reference: "+(result?.data?.id?String(result.data.id).slice(0,8).toUpperCase():"RECEIVED")+".",
+          "ok"
+        );
+      }catch(error){
+        console.error("PAPARAZZI media upload:",error);
+        setStatus($("#tip-status"),error.message||"We couldn't upload the media. Try again.","error");
+      }finally{
+        if(submitButton){
+          submitButton.disabled=false;
+          submitButton.textContent=originalText;
+        }
+      }
     });
   }
 
