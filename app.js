@@ -374,7 +374,7 @@
     const label=displayName.length>18?displayName.slice(0,17)+"…":displayName;
     if(session){
       if(account){account.textContent=label;account.title=displayName;account.href=profile?.username?"author.html?u="+encodeURIComponent(profile.username):"index.html#your-paparazzi";}
-      if(mobileAccount){mobileAccount.textContent=displayName;mobileAccount.href=profile?.is_paparazzi?"studio.html":"index.html#your-paparazzi";}
+      if(mobileAccount){mobileAccount.textContent="My profile";mobileAccount.href=profile?.username?"author.html?u="+encodeURIComponent(profile.username):"join.html";}
       [bell,mobileBell].forEach(el=>{if(el){el.hidden=false;el.textContent="NOTIFICATIONS";el.href="notifications.html";}});
     }else{
       if(account){account.textContent="SIGN IN";account.href="join.html";account.title="Sign in";}
@@ -659,10 +659,10 @@
       +"</strong></a><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
       +"<div class='story-cover'>"+image+"<div class='cover-inner'><div class='cover-words'>"+esc(story.title)
       +"</div></div></div><div class='story-body'>"+body+"</div>"
-      +"<a class='author-box' href='"+authorHref(author.username)+"'><div class='avatar'>"+esc(initials(author.display_name||"PAPARAZZI"))
+      +"<a class='author-box' href='"+authorHref(author.username)+"'><div class='avatar'>"+(author.avatar_url?"<img src=\""+esc(author.avatar_url)+"\" alt=\""+esc(author.display_name||"Contributor")+"\" class=\"author-box-avatar\">":esc(initials(author.display_name||"PAPARAZZI")))
       +"</div><div><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")+"</strong>"
       +"<div style='color:#7f786f;font-size:.82rem'>@"+esc(author.username||"paparazzigambia")
-      +" · PAPARAZZI newsroom</div></div></a>"
+      +" · PAPARAZZI newsroom</div><span class=\"author-box-action\">VIEW PROFILE →</span></div></a>"
       +"<div class='story-next'><button id='share-story' class='btn btn-dark' type='button'>Share story →</button>"
       +"<a class='btn btn-ghost' href='index.html#latest'>← Back to latest</a>"
       +"<a class='btn btn-ghost' href='submit.html'>Send a tip →</a></div></div>";
