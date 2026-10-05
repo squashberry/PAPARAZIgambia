@@ -541,10 +541,9 @@
 
   function coverImage(url,alt="",loading="lazy"){
     return url
-      ? "<span class='pz-media' data-pz-watermark><img loading='"+loading+"' referrerpolicy='no-referrer' alt='"+esc(alt)+"' src='"+esc(url)+"' onerror=\"this.closest('.pz-media')?.remove()\"><span class='pz-watermark' aria-hidden='true'>PAPARAZZI</span></span>"
+      ? "<span class='pz-media' data-pz-watermark><img loading='"+loading+"' referrerpolicy='no-referrer' alt='"+esc(alt)+"' src='"+esc(url)+"' onerror=\"this.style.display='none';this.parentElement.classList.add('media-failed')\"><span class='pz-watermark' aria-hidden='true'>PAPARAZZI</span></span>"
       : "";
   }
-
   async function watermarkImageFile(file){
     if(!file || !/^image\//i.test(file.type))return file;
     try{
