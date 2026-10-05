@@ -65,6 +65,43 @@
     el.className="status-box show "+(kind==="error"?"error":kind==="ok"?"ok":"");
   }
 
+  function initMotion(){
+    document.documentElement.classList.add("motion-ready");
+
+    const revealables=$("[data-reveal]");
+    if("IntersectionObserver" in window){
+      const observer=new IntersectionObserver(entries=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },{threshold:0.08,rootMargin:"0px 0px -7% 0px"});
+      revealables.forEach((el,index)=>{
+        el.style.setProperty("--reveal-delay",String(Math.min(index*45,280))+"ms");
+        observer.observe(el);
+      });
+    }else{
+      revealables.forEach(el=>el.classList.add("is-visible"));
+    }
+
+    $("a[data-morph], .story-hit, .rail-item, .latest-item, .beat-links a, .brand").forEach(el=>{
+      el.addEventListener("click",event=>{
+        const href=el.getAttribute("href");
+        if(!href||href.startsWith("#")||href.startsWith("mailto:")||el.target==="_blank")return;
+        if(!document.startViewTransition)return;
+        event.preventDefault();
+        document.startViewTransition(()=>{window.location.href=href;});
+      });
+    });
+
+    window.addEventListener("pageshow",()=>{
+      document.body.classList.remove("page-leaving");
+      document.body.classList.add("page-ready");
+    },{once:true});
+  }
+
   const SITE_ORIGIN="https://squashberry.github.io/PAPARAZZIgambia";
   const TIKTOK_URL="https://www.tiktok.com/@paparazzigambia?lang=en";
 
@@ -356,15 +393,18 @@
     });
   }
 
-  async function initShell(){
+  function initShell(){
     hideSplash();
     initMobileNav();
 
-    const session=await currentSession();
-    const profile=session?await ensureProfile(session.user):null;
-    renderNav(session,profile);
+    renderNav(null,null);
 
     if(supabase){
+      currentSession().then(async session=>{
+        const profile=session?await ensureProfile(session.user):null;
+        renderNav(session,profile);
+      }).catch(()=>{});
+
       supabase.auth.onAuthStateChange(async(_event,next)=>{
         const p=next?await ensureProfile(next.user):null;
         renderNav(next,p);
@@ -953,9 +993,10 @@
 
   document.addEventListener("DOMContentLoaded",async()=>{
     hideSplash();
-    try{
-      await initShell();
+    initMotion();
+    initShell();
 
+    try{
       const page=document.body.dataset.page;
       if(page==="home")await initHome();
       if(page==="story")await initStory();
@@ -964,9 +1005,11 @@
       if(page==="submit")await initSubmit();
 
       hideSplash();
+      document.body.classList.add("page-ready");
     }catch(error){
       console.error("PAPARAZZI startup error:",error);
       hideSplash();
+      document.body.classList.add("page-ready");
       toast("PAPARAZZI loaded with a temporary service issue.","error");
     }
   });
