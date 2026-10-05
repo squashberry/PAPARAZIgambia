@@ -64,7 +64,6 @@
   }
 
   function storyHref(story){
-    if(story?._starter)return "stories/"+encodeURIComponent(story.slug)+".html";
     return "story.html?slug="+encodeURIComponent(story.slug);
   }
 
@@ -458,31 +457,67 @@
   const starterStories=[
     seed,
     {
-      slug:"how-paparazzi-works",
-      title:"How PAPARAZZI works",
-      category:"Inside PAPARAZZI",
+      slug:"how-paparazzi-works",title:"How PAPARAZZI works",category:"Inside PAPARAZZI",
       excerpt:"Tips come in fast. We slow down long enough to check the story, add context and decide what is worth publishing.",
       body:"PAPARAZZI is built for the moments people actually talk about. Community tips are reviewed before publication, and contributors publish under their own byline.",
       author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
       cover_url:"https://images.unsplash.com/photo-1492684223066-81342ee5ff71?auto=format&fit=crop&w=1200&q=85"
     },
     {
-      slug:"become-a-paparazzi",
-      title:"Your byline can start here",
-      category:"Community",
-      excerpt:"Create an account, become a PAPARAZZI contributor and publish stories from the places you know best.",
-      body:"The newsroom works better when the people closest to the story can tell it.",
+      slug:"weekend-in-the-gambia",title:"The weekend is where The Gambia comes alive",category:"Nightlife",
+      excerpt:"From beachside evenings to packed dance floors, weekends have their own rhythm. Here is what makes the scene feel unmistakably Gambian.",
+      body:"There is a particular energy to a Gambian weekend. Plans start casually, group chats get louder, outfits become more intentional and suddenly everybody seems to know where everybody else is going.\n\nPAPARAZZI is interested in that atmosphere: the people getting ready, the music, the style, the unexpected meetings and the small moments that become tomorrow's conversation.\n\nThis is an editorial look at the culture around a night out, not a report of one specific event.",
       author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
-      cover_url:"https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=1200&q=85"
+      cover_url:"https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=85"
     },
     {
-      slug:"send-a-tip",
-      title:"You saw it. Send the tip.",
-      category:"Tip line",
+      slug:"gambian-style-watch",title:"Style watch: why the details always matter",category:"Style",
+      excerpt:"The outfit is rarely just the outfit. Colour, confidence, tailoring and the smallest accessories can tell the whole story.",
+      body:"Walk through any busy social setting and you will notice that Gambian style does not need to shout to be remembered. A clean pair of shoes, a sharp cut, carefully chosen jewellery or one unexpected piece can completely change the look.\n\nPAPARAZZI wants to document that creativity without turning people into costumes. When we spotlight style, the person comes first and the clothes tell the rest of the story.",
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+      cover_url:"https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=85"
+    },
+    {
+      slug:"faces-to-watch",title:"Faces to watch: the people shaping the next scene",category:"People",
+      excerpt:"Creators, organisers, performers and everyday personalities are building the culture around us. We are paying attention.",
+      body:"Every scene has people quietly moving it forward. They organise the event, start the conversation, make the music, build the look, photograph the night or simply bring everyone together.\n\nThis recurring PAPARAZZI column is about discovering those personalities before they become impossible to miss. We will keep the focus on work, character and contribution.",
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+      cover_url:"https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=85"
+    },
+    {
+      slug:"the-art-of-the-gambian-event",title:"The art of putting on a Gambian event",category:"Events",
+      excerpt:"A good event looks effortless from the crowd. Behind it is timing, logistics, promotion and a lot of people doing their jobs.",
+      body:"Before the first guest arrives, somebody has already spent weeks thinking about the room, the sound, the guest list, the promotion and what happens when the unexpected inevitably happens.\n\nGreat events are a form of storytelling. The venue sets the mood, the crowd gives it life and the smallest details determine what people remember on Monday.",
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+      cover_url:"https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=1200&q=85"
+    },
+    {
+      slug:"what-makes-a-story",title:"What makes a story worth publishing?",category:"Inside PAPARAZZI",
+      excerpt:"Not every viral post is a story. Here is the test we use before something earns a place on the newsroom.",
+      body:"A story needs more than noise. We look for something people genuinely need or want to understand, a clear reason it matters, enough context to avoid misleading readers and a way to separate what is known from what is only being claimed.\n\nThat standard matters especially when a post involves real people. Interesting is good. Accurate is better.",
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+      cover_url:"https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=85"
+    },
+    {
+      slug:"phone-camera-to-newsroom",title:"From phone camera to newsroom: how a tip becomes a story",category:"Community",
+      excerpt:"You do not need a press badge to notice something worth reporting. You do need context, care and the facts you can verify.",
+      body:"A useful tip can be as simple as a photograph, a location and a clear explanation of what happened. The more context you can provide, the easier it is for the newsroom to check the lead.\n\nDo not put yourself in danger for a photograph. Do not publish private information just because it is available. Send what you know and let the newsroom do the checking.",
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+      cover_url:"https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=85"
+    },
+    {
+      slug:"send-a-tip",title:"You saw it. Send the tip.",category:"Tip line",
       excerpt:"A photo, a lead, a rumour worth checking or a detail everyone else missed can start a story.",
-      body:"Anonymous tips are welcome. We review submissions before anything reaches the front page.",
+      body:"Anonymous tips are welcome. We review submissions before anything reaches the front page. If you can include when and where something happened, what you personally saw and any media you own, that helps us verify it.",
       author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
       cover_url:"https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=85"
+    },
+    {
+      slug:"become-a-paparazzi",title:"Your byline can start here",category:"Community",
+      excerpt:"Create an account, become a PAPARAZZI contributor and publish stories from the places you know best.",
+      body:"The newsroom works better when the people closest to the story can tell it. Build your contributor profile, choose the beats you understand and publish original work through the PAPARAZZI studio.",
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
+      cover_url:"https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=1200&q=85"
     }
   ];
 
