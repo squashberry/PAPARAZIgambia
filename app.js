@@ -65,6 +65,123 @@
     el.className="status-box show "+(kind==="error"?"error":kind==="ok"?"ok":"");
   }
 
+  const SITE_ORIGIN="https://squashberry.github.io/PAPARAZZIgambia";
+  const TIKTOK_URL="https://www.tiktok.com/@paparazzigambia?lang=en";
+
+  function setMeta(name,value,attribute="name"){
+    if(!value)return;
+    let meta=document.head.querySelector('meta['+attribute+'="'+name+'"]');
+    if(!meta){
+      meta=document.createElement("meta");
+      meta.setAttribute(attribute,name);
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content",String(value));
+  }
+
+  function setLink(rel,href){
+    let link=document.head.querySelector('link[rel="'+rel+'"]');
+    if(!link){
+      link=document.createElement("link");
+      link.setAttribute("rel",rel);
+      document.head.appendChild(link);
+    }
+    link.setAttribute("href",href);
+  }
+
+  function updateSocialMeta({title,description,url,image,type="website",publishedAt=null,modifiedAt=null,author=null,category=null}){
+    document.title=title;
+    setMeta("description",description);
+    setLink("canonical",url);
+
+    setMeta("og:type",type,"property");
+    setMeta("og:site_name","PAPARAZZI🇬🇲","property");
+    setMeta("og:locale","en_GM","property");
+    setMeta("og:title",title,"property");
+    setMeta("og:description",description,"property");
+    setMeta("og:url",url,"property");
+    setMeta("og:image",image,"property");
+    setMeta("og:image:alt",title,"property");
+    setMeta("og:image:width","1200","property");
+    setMeta("og:image:height","630","property");
+
+    setMeta("twitter:card","summary_large_image");
+    setMeta("twitter:title",title);
+    setMeta("twitter:description",description);
+    setMeta("twitter:image",image);
+
+    if(type==="article"){
+      if(publishedAt)setMeta("article:published_time",publishedAt,"property");
+      if(modifiedAt)setMeta("article:modified_time",modifiedAt,"property");
+      if(author)setMeta("article:author",author,"property");
+      if(category)setMeta("article:section",category,"property");
+    }
+  }
+
+  function installArticleSchema(story,author,url,image){
+    const existing=document.getElementById("paparazzi-article-schema");
+    if(existing)existing.remove();
+
+    const script=document.createElement("script");
+    script.type="application/ld+json";
+    script.id="paparazzi-article-schema";
+    script.textContent=JSON.stringify({
+      "@context":"https://schema.org",
+      "@type":"NewsArticle",
+      headline:story.title,
+      description:story.excerpt||String(story.body||"").slice(0,180),
+      image:[image],
+      datePublished:story.published_at||story.created_at||new Date().toISOString(),
+      dateModified:story.updated_at||story.published_at||story.created_at||new Date().toISOString(),
+      author:[{"@type":"Person","name":author.display_name||author.username||"PAPARAZZI🇬🇲"}],
+      publisher:{
+        "@type":"Organization",
+        name:"PAPARAZZI🇬🇲",
+        url:SITE_ORIGIN+"/",
+        sameAs:[TIKTOK_URL],
+        logo:{"@type":"ImageObject","url":SITE_ORIGIN+"/favicon.svg"}
+      },
+      mainEntityOfPage:url,
+      url,
+      inLanguage:"en-GM",
+      articleSection:story.category||"Story",
+      isPartOf:{"@type":"WebSite",name:"PAPARAZZI🇬🇲",url:SITE_ORIGIN+"/"}
+    });
+    document.head.appendChild(script);
+  }
+
+  async function shareContent({title,text,url,imageUrl=null}){
+    const data={title,text,url};
+    try{
+      if(imageUrl&&navigator.share&&navigator.canShare){
+        try{
+          const response=await fetch(imageUrl,{mode:"cors"});
+          if(response.ok){
+            const blob=await response.blob();
+            const mime=blob.type||"image/jpeg";
+            const ext=mime.includes("png")?".png":mime.includes("webp")?".webp":mime.includes("svg")?".svg":".jpg";
+            const file=new File([blob],"paparazzi-share"+ext,{type:mime});
+            if(navigator.canShare({files:[file]}))data.files=[file];
+          }
+        }catch(_){}
+      }
+
+      if(navigator.share){
+        await navigator.share(data);
+        return;
+      }
+    }catch(error){
+      if(error?.name==="AbortError")return;
+    }
+
+    try{
+      await navigator.clipboard.writeText(url);
+      toast("Share link copied.");
+    }catch(_){
+      toast("Copy this page URL to share it.","error");
+    }
+  }
+
   async function currentSession(){
     if(!supabase)return null;
     try{
@@ -118,7 +235,7 @@
   const MEDIA_BUCKET="paparazzi-media";
   const TIPS_BUCKET="paparazzi-tips";
   const MAX_FILE_BYTES=50*1024*1024;
-  const MEDIA_TYPES=/^(image|video)\\//i;
+  const MEDIA_TYPES=/^(image|video)\//i;
 
   function fileSize(bytes){
     if(bytes<1024*1024)return Math.max(1,Math.round(bytes/1024))+" KB";
@@ -334,6 +451,22 @@
   async function initHome(){
     if(!$("#lead-title"))return;
 
+    updateSocialMeta({
+      title:"PAPARAZZI🇬🇲 — The Gambia's Social Scene",
+      description:"The Gambia's people-powered social, entertainment, culture, nightlife and style newsroom.",
+      url:SITE_ORIGIN+"/",
+      image:SITE_ORIGIN+"/og-image.svg",
+      type:"website"
+    });
+
+    const shareSite=$("#share-site");
+    if(shareSite)shareSite.onclick=()=>shareContent({
+      title:"PAPARAZZI🇬🇲",
+      text:"The Gambia's social scene, through the PAPARAZZI lens.",
+      url:SITE_ORIGIN+"/",
+      imageUrl:SITE_ORIGIN+"/og-image.svg"
+    });
+
     const result=await fetchStories(12);
     const usingStarter=!result.data.length;
     const stories=(result.data.length?result.data:starterStories).map((item,index)=>({
@@ -402,6 +535,23 @@
     const body=String(story.body||"").split(/\n\s*\n/).map(p=>"<p>"+esc(p).replace(/\n/g,"<br>")+"</p>").join("");
     const image=story.cover_url?coverImage(story.cover_url,story.title,"eager"):"";
 
+    const storyUrl=SITE_ORIGIN+"/story.html?slug="+encodeURIComponent(story.slug);
+    const storyImage=story.cover_url||SITE_ORIGIN+"/og-image.svg";
+    const storyDescription=story.excerpt||String(story.body||"").slice(0,180);
+
+    updateSocialMeta({
+      title:story.title+" — PAPARAZZI🇬🇲",
+      description:storyDescription,
+      url:storyUrl,
+      image:storyImage,
+      type:"article",
+      publishedAt:story.published_at||story.created_at,
+      modifiedAt:story.updated_at||story.published_at||story.created_at,
+      author:author.display_name||author.username||"PAPARAZZI🇬🇲",
+      category:story.category||"Story"
+    });
+    installArticleSchema(story,author,storyUrl,storyImage);
+
     root.innerHTML="<div class='container story-reader'>"
       +"<div class='story-reader-head'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
       +"<h1>"+esc(story.title)+"</h1><p class='story-dek'>"+esc(story.excerpt||"")+"</p>"
@@ -413,10 +563,17 @@
       +"</div><div><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")+"</strong>"
       +"<div style='color:#7f786f;font-size:.82rem'>@"+esc(author.username||"paparazzigambia")
       +" · PAPARAZZI newsroom</div></div></div>"
-      +"<div class='story-next'><a class='btn btn-ghost' href='index.html#latest'>← Back to latest</a>"
-      +"<a class='btn btn-dark' href='submit.html'>Send a tip →</a></div></div>";
+      +"<div class='story-next'><button id='share-story' class='btn btn-dark' type='button'>Share story →</button>"
+      +"<a class='btn btn-ghost' href='index.html#latest'>← Back to latest</a>"
+      +"<a class='btn btn-ghost' href='submit.html'>Send a tip →</a></div></div>";
 
-    document.title=story.title+" — PAPARAZZI🇬🇲";
+    const shareStory=$("#share-story");
+    if(shareStory)shareStory.onclick=()=>shareContent({
+      title:story.title,
+      text:storyDescription,
+      url:storyUrl,
+      imageUrl:story.cover_url||null
+    });
   }
 
   async function initJoin(){
