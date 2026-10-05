@@ -116,6 +116,7 @@
   }
 
   const MEDIA_BUCKET="paparazzi-media";
+  const TIPS_BUCKET="paparazzi-tips";
   const MAX_FILE_BYTES=50*1024*1024;
   const MEDIA_TYPES=/^(image|video)\\//i;
 
@@ -158,7 +159,7 @@
     ).join("");
   }
 
-  async function uploadMediaFiles(files,folder,onProgress){
+  async function uploadMediaFiles(files,bucket,folder,onProgress,makePublic=false){
     if(!supabase)throw new Error("Media storage is temporarily unavailable.");
     const list=Array.from(files||[]);
     const error=validateMediaFiles(list,20);
@@ -169,7 +170,7 @@
       const file=list[i];
       const path=folder+"/"+crypto.randomUUID()+"-"+safeFilename(file.name);
       const result=await withTimeout(
-        supabase.storage.from(MEDIA_BUCKET).upload(path,file,{
+        supabase.storage.from(bucket).upload(path,file,{
           cacheControl:"3600",
           contentType:file.type,
           upsert:false
@@ -179,18 +180,14 @@
       );
       if(result?.error)throw new Error(result.error.message||"Upload failed.");
 
-      const publicResult=supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
-      const publicUrl=publicResult?.data?.publicUrl;
-      if(!publicUrl)throw new Error("The uploaded file did not receive a public URL.");
+      const item={path,name:file.name,type:file.type,size:file.size};
+      if(makePublic){
+        const publicResult=supabase.storage.from(bucket).getPublicUrl(path);
+        item.url=publicResult?.data?.publicUrl||null;
+        if(!item.url)throw new Error("The uploaded file did not receive a public URL.");
+      }
 
-      uploaded.push({
-        url:publicUrl,
-        path,
-        name:file.name,
-        type:file.type,
-        size:file.size
-      });
-
+      uploaded.push(item);
       if(onProgress)onProgress(i+1,list.length,file);
     }
 
@@ -644,9 +641,9 @@
         let coverUrl=null;
 
         if(coverFile){
-          media=await uploadMediaFiles([coverFile],"stories/"+user.id+"/"+articleId,(done)=>{
+          media=await uploadMediaFiles([coverFile],MEDIA_BUCKET,"stories/"+user.id+"/"+articleId,(done)=>{
             if(publishButton)publishButton.textContent=done===1?"Uploading cover…":"Uploading…";
-          });
+          },true);
           coverUrl=media[0]?.url||null;
         }
 
@@ -733,7 +730,7 @@
       try{
         let media=[];
         if(files.length){
-          media=await uploadMediaFiles(files,"tips/"+submitId,(done,total)=>{
+          media=await uploadMediaFiles(files,TIPS_BUCKET,"tips/"+submitId,(done,total)=>{
             if(submitButton)submitButton.textContent="Uploading "+done+" of "+total+"…";
           });
         }
