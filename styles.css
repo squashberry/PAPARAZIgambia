@@ -288,3 +288,12 @@ body.telegram-mini-app{padding-bottom:calc(env(safe-area-inset-bottom) + 12px)}
 }
 
 .nav-signout{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:9px 12px;font-weight:800;font-size:.75rem;cursor:pointer}.nav-signout:hover{background:#fff}.mobile-signout{border:1px solid var(--line);background:transparent;text-align:left;padding:12px;border-radius:12px;font-weight:800;cursor:pointer}.mobile-signout:hover{background:#fff}@media(max-width:1050px){.nav-signout{display:none}}
+
+/* Final responsive layout guard */
+@media (min-width:721px) and (max-width:1050px){
+  .container{padding-inline:22px}.header-inner{padding-inline:18px}.editorial-hero{grid-template-columns:1fr;gap:16px}
+  .story-hit{grid-template-columns:minmax(0,1fr) minmax(260px,.78fr);min-height:390px}.lead-visual{min-height:390px}.lead-copy{padding:28px}
+  .lead-copy h2{font-size:clamp(2.5rem,5vw,4.3rem)}.hero-rail{min-height:0}.rail-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px}
+  .beat-links{grid-template-columns:repeat(3,1fr)}.latest-item{grid-template-columns:32px 120px minmax(0,1fr);gap:14px}.latest-thumb{height:92px}
+}
+@media (max-width:720px){.editorial-hero{grid-template-columns:1fr}.story-hit{grid-template-columns:1fr;min-height:0}.lead-visual{min-height:250px;aspect-ratio:16/10}.hero-intro{display:block}.latest-list{width:100%;overflow:hidden}.latest-info{min-width:0}.latest-info h3,.latest-info p{overflow-wrap:anywhere}.desk-actions{display:grid;grid-template-columns:1fr;gap:10px}.desk-actions .btn,.desk-actions .text-link{width:100%;justify-content:center}}
