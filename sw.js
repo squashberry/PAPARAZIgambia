@@ -1,4 +1,4 @@
-const CACHE="paparazzi-v13";
+const CACHE="paparazzi-v14";
 const CORE=[
   "./",
   "./index.html",
