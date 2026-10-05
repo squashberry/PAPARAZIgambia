@@ -378,6 +378,7 @@
       try{
         const result=await supabase?.auth?.signOut();
         if(result?.error)throw new Error(result.error.message||"Unable to sign out.");
+        try{localStorage.removeItem("paparazzi_signed_in");}catch(_){}
         location.replace("index.html");
       }catch(error){
         toast(error?.message||"Unable to sign out.","error");
@@ -408,6 +409,8 @@
       mobile.classList.toggle("is-open",open);
       mobile.setAttribute("aria-hidden",String(!open));
       menu.setAttribute("aria-expanded",String(open));
+      document.documentElement.classList.toggle("menu-open",open);
+      document.body.classList.toggle("menu-open",open);
     };
 
     setOpen(false);
@@ -548,24 +551,23 @@
     if(!file || !/^image\//i.test(file.type))return file;
     try{
       const bitmap=await createImageBitmap(file);
-      const maxDimension=2400;
+      const maxDimension=1800;
       const scale=Math.min(1,maxDimension/Math.max(bitmap.width,bitmap.height));
       const canvas=document.createElement("canvas");
-      canvas.width=Math.max(1,Math.round(bitmap.width*scale));
-      canvas.height=Math.max(1,Math.round(bitmap.height*scale));
-      const ctx=canvas.getContext("2d",{alpha:true});
-      ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+      canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));
+      const ctx=canvas.getContext("2d",{alpha:true});ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
       const size=Math.max(18,Math.round(canvas.width*0.022));
-      ctx.save(); ctx.font="900 "+size+"px Arial,sans-serif"; ctx.textAlign="right"; ctx.textBaseline="bottom";
-      ctx.fillStyle="rgba(255,255,255,.86)"; ctx.shadowColor="rgba(0,0,0,.65)"; ctx.shadowBlur=Math.max(2,size*.18);
-      ctx.fillText("PAPARAZZI",canvas.width-size*.55,canvas.height-size*.55); ctx.restore();
-      bitmap.close?.();
-      const blob=await new Promise(resolve=>canvas.toBlob(resolve,file.type==="image/png"?"image/png":"image/jpeg",.92));
-      return blob ? new File([blob],file.name,{type:blob.type||file.type,lastModified:Date.now()}) : file;
-    }catch(_){ return file; }
+      ctx.save();ctx.font="900 "+size+"px Arial,sans-serif";ctx.textAlign="right";ctx.textBaseline="bottom";
+      ctx.fillStyle="rgba(255,255,255,.86)";ctx.shadowColor="rgba(0,0,0,.65)";ctx.shadowBlur=Math.max(2,size*.18);
+      ctx.fillText("PAPARAZZI",canvas.width-size*.55,canvas.height-size*.55);ctx.restore();bitmap.close?.();
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",.82));
+      if(blob){const base=String(file.name||"image").replace(/\.[^.]+$/,"");return new File([blob],base+".webp",{type:"image/webp",lastModified:Date.now()});}
+    }catch(_){}
+    return file;
   }
-
   window.PAPARAZZI_WATERMARK_FILE=watermarkImageFile;
+  window.PAPARAZZI_PREPARE_FILE=watermarkImageFile;
+
   function storyMediaUrls(story){const raw=Array.isArray(story?.media_urls)?story.media_urls:[];const urls=raw.map(item=>typeof item==="string"?item:item?.url).filter(Boolean);if(story?.cover_url&&!urls.includes(story.cover_url))urls.unshift(story.cover_url);return [...new Set(urls)];}
   function installImageWatermarks(root=document){
     $$("img:not([data-pz-wrapped])",root).forEach(img=>{
@@ -827,7 +829,9 @@
 
   async function initJoin(){
     const existingSession=await currentSession();
-    if(existingSession){
+    let rememberedSignedIn=false;
+    try{rememberedSignedIn=localStorage.getItem("paparazzi_signed_in")==="1";}catch(_){}
+    if(existingSession||rememberedSignedIn){
       const existingProfile=await ensureProfile(existingSession.user);
       const target=existingProfile?.username
         ? "author.html?u="+encodeURIComponent(existingProfile.username)
@@ -873,7 +877,7 @@
     const showVerification=email=>{
       verificationEmail=email;
       const progress=$(".signup-progress");
-      if(progress){progress.hidden=false;$(".signup-state-dot").forEach(dot=>dot.classList.toggle("active",Number(dot.dataset.step)===3));}
+      if(progress){progress.hidden=false;$$(".signup-state-dot").forEach(dot=>dot.classList.toggle("active",Number(dot.dataset.step)===3));}
       if(forms)forms.classList.add("auth-success");
       signIn.hidden=true;
       signUp.hidden=true;
@@ -1032,14 +1036,19 @@
           :result.error.message,"error");
         return;
       }
-      setStatus(box,"","");toast("Welcome back.","success");
+      const signedProfile=await ensureProfile(result.data?.user);
+      try{localStorage.setItem("paparazzi_signed_in","1");}catch(_){}
+      setStatus(box,"SIGNED IN — Welcome back, "+String(signedProfile?.display_name||result.data?.user?.email||"PAPARAZZI")+" .","ok");
+      toast("You're signed in.","success");
       signIn.classList.add("auth-complete");
-      const signedProfile=(await supabase.from("paparazi_profiles").select("*").eq("id",result.data?.user?.id).maybeSingle()).data;
-      setTimeout(()=>location.href=(authNext||(signedProfile?.is_paparazzi?"studio.html":"index.html?welcome=1")),650);
+      if(forms)forms.classList.add("auth-success");
+      const submitButton=signIn.querySelector("button[type='submit']");
+      if(submitButton)submitButton.textContent="SIGNED IN ✓";
+      setTimeout(()=>location.replace(authNext||(signedProfile?.is_paparazzi?"studio.html":"index.html?welcome=1")),900);
     });
 
     const signupStep1=$("#signup-step-1"),signupStep2=$("#signup-step-2"),signupContinue=$("#signup-continue"),signupBack=$("#signup-back");
-    const setSignupState=step=>{if(signupStep1)signupStep1.hidden=step!==1;if(signupStep2)signupStep2.hidden=step!==2;$(".signup-state-dot").forEach(dot=>dot.classList.toggle("active",Number(dot.dataset.step)===step));};
+    const setSignupState=step=>{if(signupStep1)signupStep1.hidden=step!==1;if(signupStep2)signupStep2.hidden=step!==2;$$(".signup-state-dot").forEach(dot=>dot.classList.toggle("active",Number(dot.dataset.step)===step));};
     if(signupContinue)signupContinue.addEventListener("click",()=>{const name=$("#signup-name"),email=$("#signup-email");if(!name?.reportValidity()||!email?.reportValidity())return;setSignupState(2);$("#signup-password")?.focus();});
     if(signupBack)signupBack.addEventListener("click",()=>setSignupState(1));
     setSignupState(1);
@@ -1366,6 +1375,12 @@
       });paint();
     });
   }
+  const modalStateObserver=new MutationObserver(()=>{
+    const open=document.querySelector(".modal-backdrop.is-open");
+    document.body.classList.toggle("modal-open",Boolean(open));
+  });
+  const modalObserveTarget=document.body||document.documentElement;
+  if(modalObserveTarget)modalStateObserver.observe(modalObserveTarget,{subtree:true,attributes:true,attributeFilter:["class"]});
   const _observeImages=new MutationObserver(()=>installImageWatermarks());
   if(document.body)_observeImages.observe(document.body,{childList:true,subtree:true});
 
