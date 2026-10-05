@@ -1,5 +1,21 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0b0b"><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css"><title>Studio — PAPARAZZI🇬🇲</title></head>
 <body data-page="studio"><div class="splash"><div class="splash-inner"><div class="splash-kicker">Contributor desk</div><div class="splash-word">STUDIO <span class="flag">🇬🇲</span></div><div class="splash-flash"></div></div></div>
+<script>
+(function(){
+  function hidePaparazziSplash(){
+    var splash=document.querySelector(".splash");
+    if(!splash)return;
+    splash.classList.add("is-hidden");
+    splash.style.opacity="0";
+    splash.style.visibility="hidden";
+    splash.style.pointerEvents="none";
+  }
+  if(document.readyState!=="loading") hidePaparazziSplash();
+  document.addEventListener("DOMContentLoaded",hidePaparazziSplash,{once:true});
+  window.addEventListener("load",hidePaparazziSplash,{once:true});
+  setTimeout(hidePaparazziSplash,1600);
+})();
+</script>
 <header class="site-header"><div class="header-inner"><a class="brand" href="index.html"><div class="brand-mark">PZ</div><div class="brand-copy"><div class="brand-name">PAPARAZZI🇬🇲</div><div class="brand-sub">Contributor studio</div></div></a><nav class="nav"><a href="index.html">HOME</a><a href="submit.html">SEND A TIP</a><button id="sign-out">SIGN OUT</button></nav><button id="menu-btn" class="menu-btn">☰</button></div></header>
 <main class="studio-shell"><div class="container"><div id="studio-gate" class="empty-state" style="margin:30px 0"><h3>Sign in before you hit publish.</h3><p>You need a PAPARAZZI account to write under your own byline.</p><a href="join.html" class="btn btn-dark">Sign in / create account</a></div>
 <div id="studio-app" style="display:none"><div class="studio-top"><div class="identity"><div id="studio-avatar" class="avatar">P</div><div><strong id="studio-name">PAPARAZZI</strong><span id="studio-handle">@paparazzi</span></div></div><div class="form-actions"><span id="paparazzi-status" class="status published">Reader</span><button id="become-paparazzi" class="btn btn-dark">Become a PAPARAZZI</button></div></div>
