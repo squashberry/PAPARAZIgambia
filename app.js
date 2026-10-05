@@ -367,13 +367,19 @@
 
   function renderNav(session,profile){
     const account=$("#nav-account");
-    if(!account)return;
+    const mobileAccount=$("#mobile-account");
+    const bell=$("#nav-notifications");
+    const mobileBell=$("#mobile-notifications");
+    const displayName=String(profile?.display_name||session?.user?.email?.split("@")?.[0]||"ACCOUNT").trim();
+    const label=displayName.length>18?displayName.slice(0,17)+"…":displayName;
     if(session){
-      account.textContent=profile?.is_paparazzi?"STUDIO":"BECOME PAPARAZZI";
-      account.href=profile?.is_paparazzi?"studio.html":"become-paparazzi.html";
+      if(account){account.textContent=label;account.title=displayName;account.href=profile?.is_paparazzi?"studio.html":"index.html#your-paparazzi";}
+      if(mobileAccount){mobileAccount.textContent=displayName;mobileAccount.href=profile?.is_paparazzi?"studio.html":"index.html#your-paparazzi";}
+      [bell,mobileBell].forEach(el=>{if(el){el.hidden=false;el.textContent="NOTIFICATIONS";el.href="notifications.html";}});
     }else{
-      account.textContent="SIGN IN";
-      account.href="join.html";
+      if(account){account.textContent="SIGN IN";account.href="join.html";account.title="Sign in";}
+      if(mobileAccount){mobileAccount.textContent="Sign in";mobileAccount.href="join.html";}
+      [bell,mobileBell].forEach(el=>{if(el)el.hidden=true;});
     }
   }
 
@@ -505,7 +511,39 @@
       +"<div class='latest-side'><div class='category'>"+esc(story.category||"Story")+"</div><span class='read'>READ →</span></div></a>";
   }
 
+  async function initPersonalizedHome(session,profile){
+    const wrap=$("#your-paparazzi");
+    if(!wrap||!session)return;
+    wrap.hidden=false;
+    const name=profile?.display_name||session.user?.email?.split("@")?.[0]||"there";
+    const unreadResult=await supabase.auth.getNotifications();
+    const notifications=Array.isArray(unreadResult?.data)?unreadResult.data:[];
+    const followingResult=await supabase.auth.getFollowing();
+    const following=Array.isArray(followingResult?.data)?followingResult.data:[];
+    const beats=Array.isArray(profile?.beats)?profile.beats.map(x=>String(x).toLowerCase()).filter(Boolean):[];
+    $("#your-paparazzi-greeting").textContent="Good to see you, "+name+".";
+    $("#your-paparazzi-sub").textContent=beats.length?"Stories shaped around "+beats.slice(0,3).join(", ")+".":"Follow contributors and set your beats to make this home yours.";
+    $("#your-following-count").textContent=String(following.length);
+    $("#your-notification-count").textContent=String(notifications.filter(item=>!item.read_at).length);
+    const storiesResult=await fetchStories(18);
+    let stories=storiesResult?.data||[];
+    if(beats.length){
+      const preferred=stories.filter(story=>beats.some(beat=>(String(story.category||"")+" "+String(story.title||"")+" "+String(story.excerpt||"")).toLowerCase().includes(beat)));
+      if(preferred.length>=3)stories=preferred;
+    }
+    const grid=$("#your-feed");
+    if(grid){
+      grid.innerHTML=stories.slice(0,3).map(story=>{
+        const author=story.paparazi_profiles?.display_name||story.author?.display_name||"PAPARAZZI🇬🇲";
+        return "<a class='personal-story' href='"+storyHref(story)+"'><div class='personal-story-art'>"+coverImage(story.cover_url,story.title)+"</div><div class='kicker'>"+esc(story.category||"Story")+"</div><h3>"+esc(story.title)+"</h3><div class='meta'><span>"+esc(author)+"</span><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></a>";
+      }).join("")||"<div class='empty-state'><h3>Your feed is warming up.</h3><p>Follow contributors or publish your own stories to make this space yours.</p></div>";
+    }
+  }
+
   async function initHome(){
+    const session=await currentSession();
+    const profile=session?await ensureProfile(session.user):null;
+    await initPersonalizedHome(session,profile);
     if(!$("#lead-title"))return;
 
     updateSocialMeta({
@@ -701,6 +739,8 @@
   }
 
   async function initJoin(){
+    const requestedNext=new URLSearchParams(location.search).get("next");
+    const authNext=(requestedNext&&/^[a-z0-9._/-]+(?:\?[a-z0-9_=&%.-]+)?$/i.test(requestedNext)&&!requestedNext.includes("//"))?requestedNext:null;
     const signIn=$("#sign-in-form"),signUp=$("#sign-up-form"),verifyPanel=$("#verification-panel");
     if(!signIn||!signUp)return;
     const tabs=$$(".switcher button");
@@ -781,7 +821,7 @@
       if(actions)actions.hidden=true;
       const success=$("#verification-success");
       if(success)success.hidden=false;
-      setTimeout(()=>location.href="index.html?welcome=1",900);
+      setTimeout(()=>location.href=(authNext||"index.html?welcome=1"),900);
     };
 
     const tabsReady=!!tabs.length;
@@ -895,8 +935,14 @@
       setStatus(box,"","");toast("Welcome back.","success");
       signIn.classList.add("auth-complete");
       const signedProfile=(await supabase.from("paparazi_profiles").select("*").eq("id",result.data?.user?.id).maybeSingle()).data;
-      setTimeout(()=>location.href=signedProfile?.is_paparazzi?"studio.html":"index.html?welcome=1",650);
+      setTimeout(()=>location.href=(authNext||(signedProfile?.is_paparazzi?"studio.html":"index.html?welcome=1")),650);
     });
+
+    const signupStep1=$("#signup-step-1"),signupStep2=$("#signup-step-2"),signupContinue=$("#signup-continue"),signupBack=$("#signup-back");
+    const setSignupState=step=>{if(signupStep1)signupStep1.hidden=step!==1;if(signupStep2)signupStep2.hidden=step!==2;$(".signup-state-dot").forEach(dot=>dot.classList.toggle("active",Number(dot.dataset.step)===step));};
+    if(signupContinue)signupContinue.addEventListener("click",()=>{const name=$("#signup-name"),email=$("#signup-email");if(!name?.reportValidity()||!email?.reportValidity())return;setSignupState(2);$("#signup-password")?.focus();});
+    if(signupBack)signupBack.addEventListener("click",()=>setSignupState(1));
+    setSignupState(1);
 
     signUp.addEventListener("submit",async e=>{
       e.preventDefault();
