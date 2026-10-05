@@ -11,6 +11,11 @@
     tg.ready();
     tg.expand();
 
+    // Keep raw signed init data available to the API bridge.
+    if (tg.initData) {
+      document.documentElement.dataset.telegramReady = "true";
+    }
+
     var theme = tg.themeParams || {};
     var root = document.documentElement;
     if (theme.bg_color) root.style.setProperty("--tg-bg", theme.bg_color);
