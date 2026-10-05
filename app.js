@@ -373,7 +373,7 @@
     const displayName=String(profile?.display_name||session?.user?.email?.split("@")?.[0]||"ACCOUNT").trim();
     const label=displayName.length>18?displayName.slice(0,17)+"…":displayName;
     if(session){
-      if(account){account.textContent=label;account.title=displayName;account.href=profile?.is_paparazzi?"studio.html":"index.html#your-paparazzi";}
+      if(account){account.textContent=label;account.title=displayName;account.href=profile?.username?"author.html?u="+encodeURIComponent(profile.username):"index.html#your-paparazzi";}
       if(mobileAccount){mobileAccount.textContent=displayName;mobileAccount.href=profile?.is_paparazzi?"studio.html":"index.html#your-paparazzi";}
       [bell,mobileBell].forEach(el=>{if(el){el.hidden=false;el.textContent="NOTIFICATIONS";el.href="notifications.html";}});
     }else{
