@@ -663,7 +663,7 @@
       +"<div class='meta' style='margin-top:18px'><a class='author-link' href='"+authorHref(author.username)+"'><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")
       +"</strong></a><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
       +"<div class='story-cover'>"+image+"<div class='cover-inner'><div class='cover-words'>"+esc(story.title)
-      +"</div></div></div><div class='story-body'>"+body+"</div>"
+      +"</div></div></div>"+gallery+"<div class='story-body'>"+body+"</div>"
       +"<a class='author-box' href='"+authorHref(author.username)+"'><div class='avatar'>"+esc(initials(author.display_name||"PAPARAZZI"))
       +"</div><div><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")+"</strong>"
       +"<div style='color:#7f786f;font-size:.82rem'>@"+esc(author.username||"paparazzigambia")
