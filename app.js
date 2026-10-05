@@ -6,12 +6,17 @@
     ?window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey)
     :null;
 
-  window.PAPARAZI={supabase:supabase};
+  window.PAPARAZI={supabase};
 
   const $=(s,r=document)=>r.querySelector(s);
-  const qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
-  window["$"+"$"]=qsa;
-  const emergencyHideSplash=()=>{
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+
+  const withTimeout=(promise,ms,fallback=null)=>Promise.race([
+    promise,
+    new Promise(resolve=>setTimeout(()=>resolve(fallback),ms))
+  ]);
+
+  const hideSplash=()=>{
     const splash=$(".splash");
     if(!splash)return;
     splash.classList.add("is-hidden");
@@ -19,28 +24,34 @@
     splash.style.visibility="hidden";
     splash.style.pointerEvents="none";
   };
-  setTimeout(emergencyHideSplash,1600);
 
-  const esc=(value)=>{
+  const esc=value=>{
     const map={"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"};
-    return String(value??"").replace(/[&<>"']/g,(c)=>map[c]);
+    return String(value??"").replace(/[&<>"']/g,c=>map[c]);
   };
 
-  const slugify=(value)=>String(value||"").toLowerCase().trim()
+  const slugify=value=>String(value||"").toLowerCase().trim()
     .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,90);
 
-  const fmtDate=(value)=>value
-    ?new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"short",year:"numeric"}).format(new Date(value))
-    :"Just in";
+  const fmtDate=value=>{
+    if(!value)return "Just in";
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime()))return "Just in";
+    return new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"short",year:"numeric"}).format(date);
+  };
 
-  const initials=(name)=>{
+  const initials=name=>{
     const parts=String(name||"PAPARAZZI").trim().split(/\s+/).filter(Boolean);
     return (parts.slice(0,2).map(x=>x[0]).join("")||"P").toUpperCase();
   };
 
   function toast(message,tone){
     let t=$(".toast");
-    if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t);}
+    if(!t){
+      t=document.createElement("div");
+      t.className="toast";
+      document.body.appendChild(t);
+    }
     t.textContent=message;
     t.style.background=tone==="error"?"#8e2428":"#111";
     t.classList.add("show");
@@ -56,26 +67,52 @@
 
   async function currentSession(){
     if(!supabase)return null;
-    const r=await supabase.auth.getSession();
-    return r.data?.session||null;
+    try{
+      const result=await withTimeout(supabase.auth.getSession(),3500,null);
+      return result?.data?.session||null;
+    }catch(_){
+      return null;
+    }
   }
 
   async function ensureProfile(user){
     if(!supabase||!user)return null;
-    const existing=await supabase.from("paparazi_profiles").select("*").eq("id",user.id).maybeSingle();
-    if(existing.data)return existing.data;
+    try{
+      const existing=await withTimeout(
+        supabase.from("paparazi_profiles").select("*").eq("id",user.id).maybeSingle(),
+        3500,
+        null
+      );
+      if(existing?.data)return existing.data;
 
-    const label=(user.email||"paparazzi").split("@")[0].replace(/[._-]+/g," ").trim()||"Paparazzi";
-    const base=slugify(label).replace(/-/g,"").slice(0,24)||"paparazzi";
-    let username=base;
-    const taken=await supabase.from("paparazi_profiles").select("id").eq("username",username).maybeSingle();
-    if(taken.data)username=base.slice(0,18)+Math.random().toString(36).slice(2,6);
+      const label=(user.email||"paparazzi").split("@")[0].replace(/[._-]+/g," ").trim()||"Paparazzi";
+      const base=slugify(label).replace(/-/g,"").slice(0,24)||"paparazzi";
+      let username=base;
 
-    const inserted=await supabase.from("paparazi_profiles")
-      .insert({id:user.id,username,display_name:label.replace(/\b\w/g,c=>c.toUpperCase())})
-      .select().single();
+      const taken=await withTimeout(
+        supabase.from("paparazi_profiles").select("id").eq("username",username).maybeSingle(),
+        3000,
+        null
+      );
+      if(taken?.data)username=base.slice(0,18)+Math.random().toString(36).slice(2,6);
 
-    return inserted.error?null:inserted.data;
+      const inserted=await withTimeout(
+        supabase.from("paparazi_profiles")
+          .insert({
+            id:user.id,
+            username,
+            display_name:label.replace(/\b\w/g,c=>c.toUpperCase())
+          })
+          .select()
+          .single(),
+        4000,
+        null
+      );
+
+      return inserted?.error?null:inserted?.data||null;
+    }catch(_){
+      return null;
+    }
   }
 
   function renderNav(session,profile){
@@ -90,22 +127,33 @@
     }
   }
 
-  async function initShell(){
-    const splash=$(".splash");
-    if(splash){
-      const hide=()=>{
-        splash.classList.add("is-hidden");
-        try{sessionStorage.setItem("paparazzi_splash_seen","1");}catch(_){}
-      };
-      let seen=false;
-      try{seen=sessionStorage.getItem("paparazzi_splash_seen")==="1";}catch(_){}
-      if(seen)hide();
-      else setTimeout(hide,1050);
-      window.addEventListener("pageshow",()=>setTimeout(hide,1200),{once:true});
-    }
+  function initMobileNav(){
+    const menu=$("#menu-btn");
+    const mobile=$("#mobile-nav");
+    if(!menu||!mobile)return;
 
-    const menu=$("#menu-btn"),mobile=$("#mobile-nav");
-    if(menu&&mobile)menu.addEventListener("click",()=>mobile.classList.toggle("is-open"));
+    const setOpen=open=>{
+      mobile.classList.toggle("is-open",open);
+      mobile.setAttribute("aria-hidden",String(!open));
+      menu.setAttribute("aria-expanded",String(open));
+    };
+
+    setOpen(false);
+    menu.addEventListener("click",e=>{
+      e.stopPropagation();
+      setOpen(!mobile.classList.contains("is-open"));
+    });
+    mobile.addEventListener("click",e=>{
+      if(e.target.closest("a"))setOpen(false);
+    });
+    document.addEventListener("click",e=>{
+      if(mobile.classList.contains("is-open")&&!mobile.contains(e.target)&&!menu.contains(e.target))setOpen(false);
+    });
+  }
+
+  async function initShell(){
+    hideSplash();
+    initMobileNav();
 
     const session=await currentSession();
     const profile=session?await ensureProfile(session.user):null;
@@ -130,89 +178,181 @@
     author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"}
   };
 
-  async function fetchStories(limit=8){
+  const starterStories=[
+    seed,
+    {
+      slug:"how-paparazzi-works",
+      title:"How PAPARAZZI works",
+      category:"Inside PAPARAZZI",
+      excerpt:"Tips come in fast. We slow down long enough to check the story, add context and decide what is worth publishing.",
+      body:"PAPARAZZI is built for the moments people actually talk about. Community tips are reviewed before publication, and contributors publish under their own byline.",
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"}
+    },
+    {
+      slug:"become-a-paparazzi",
+      title:"Your byline can start here",
+      category:"Community",
+      excerpt:"Create an account, become a PAPARAZZI contributor and publish stories from the places you know best.",
+      body:"The newsroom works better when the people closest to the story can tell it.",
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"}
+    },
+    {
+      slug:"send-a-tip",
+      title:"You saw it. Send the tip.",
+      category:"Tip line",
+      excerpt:"A photo, a lead, a rumour worth checking or a detail everyone else missed can start a story.",
+      body:"Anonymous tips are welcome. We review submissions before anything reaches the front page.",
+      author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"}
+    }
+  ];
+
+  async function fetchStories(limit=12){
     if(!supabase)return {data:[],error:null};
-    const r=await supabase.from("paparazi_articles")
-      .select("id,title,slug,excerpt,body,cover_url,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
-      .eq("status","published").order("published_at",{ascending:false}).limit(limit);
-    return {data:r.data||[],error:r.error};
+    try{
+      const result=await withTimeout(
+        supabase.from("paparazi_articles")
+          .select("id,title,slug,excerpt,body,cover_url,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
+          .eq("status","published")
+          .order("published_at",{ascending:false,nullsFirst:false})
+          .limit(limit),
+        4500,
+        {data:[],error:{message:"timeout"}}
+      );
+      return {data:result?.data||[],error:result?.error||null};
+    }catch(error){
+      return {data:[],error};
+    }
   }
 
-  function storyCard(story,index){
-    const author=story.paparazi_profiles?.display_name||"PAPARAZZI🇬🇲";
-    return "<article class='story-card'><a href='story.html?slug="+encodeURIComponent(story.slug)+"'><div class='story-card-art'><span class='story-card-tag'>"+
-      esc(story.category||"Story")+"</span><span class='num'>"+String(index+1).padStart(2,"0")+
-      "</span></div><div class='story-card-body'><h3>"+esc(story.title)+"</h3><p>"+
-      esc(story.excerpt||(story.body||"").slice(0,150))+"</p><div class='meta'><strong>"+
-      esc(author)+"</strong><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+
-      "</span></div></div></a></article>";
+  function coverImage(url,alt="",loading="lazy"){
+    return url
+      ?"<img loading='"+loading+"' referrerpolicy='no-referrer' alt='"+esc(alt)+"' src='"+esc(url)+"' onerror=\"this.remove()\">"
+      :"";
+  }
+
+  function railItem(story){
+    const author=story.paparazi_profiles?.display_name||story.author?.display_name||"PAPARAZZI🇬🇲";
+    return "<a class='rail-item' href='story.html?slug="+encodeURIComponent(story.slug)+"'>"
+      +"<div class='rail-thumb'>"+coverImage(story.cover_url,story.title)+"</div>"
+      +"<div><div class='kicker'>"+esc(story.category||"Story")+"</div>"
+      +"<h3>"+esc(story.title)+"</h3>"
+      +"<div class='meta'><span>"+esc(author)+"</span><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div></a>";
+  }
+
+  function latestItem(story,index){
+    const author=story.paparazi_profiles?.display_name||story.author?.display_name||"PAPARAZZI🇬🇲";
+    const variant=[""," alt-a"," alt-b"," alt-c"][index%4];
+    return "<a class='latest-item' href='story.html?slug="+encodeURIComponent(story.slug)+"'>"
+      +"<span class='latest-index'>"+String(index+1).padStart(2,"0")+"</span>"
+      +"<div class='latest-thumb"+variant+"'>"+coverImage(story.cover_url,story.title)+"</div>"
+      +"<div class='latest-info'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
+      +"<h3>"+esc(story.title)+"</h3>"
+      +"<p>"+esc(story.excerpt||(story.body||"").slice(0,170))+"</p>"
+      +"<div class='meta' style='margin-top:10px'><strong>"+esc(author)+"</strong><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
+      +"<div class='latest-side'><div class='category'>"+esc(story.category||"Story")+"</div><span class='read'>READ →</span></div></a>";
   }
 
   async function initHome(){
-    if(!$("#featured-title"))return;
-    const r=await fetchStories(8);
-    const stories=r.data.length?r.data:[{
-      ...seed,
-      published_at:new Date().toISOString(),
-      created_at:new Date().toISOString(),
-      paparazi_profiles:seed.author
-    }];
+    if(!$("#lead-title"))return;
+
+    const result=await fetchStories(12);
+    const usingStarter=!result.data.length;
+    const stories=(result.data.length?result.data:starterStories).map((item,index)=>({
+      ...item,
+      published_at:item.published_at||new Date(Date.now()-(index*86400000)).toISOString(),
+      created_at:item.created_at||new Date(Date.now()-(index*86400000)).toISOString(),
+      paparazi_profiles:item.paparazi_profiles||item.author
+    }));
+
     const featured=stories[0];
-    $("#featured-kicker").textContent=featured.category||"Featured";
-    $("#featured-title").textContent=featured.title;
-    $("#featured-excerpt").textContent=featured.excerpt||"";
-    $("#featured-meta").innerHTML="<strong>"+esc(featured.paparazi_profiles?.display_name||"PAPARAZZI🇬🇲")+
-      "</strong><span>•</span><span>"+fmtDate(featured.published_at||featured.created_at)+"</span>";
-    $("#featured-link").href="story.html?slug="+encodeURIComponent(featured.slug);
-    $("#featured-art-title").textContent=featured.title;
-    $("#story-grid").innerHTML=stories.slice(1).map(storyCard).join("")||
-      "<div class='empty-state' style='grid-column:1/-1'><h3>The newsroom is warming up.</h3><p>Be the first person to put something worth talking about on the page.</p></div>";
+    $("#lead-kicker").textContent=featured.category||"Featured";
+    $("#lead-title").textContent=featured.title;
+    $("#lead-excerpt").textContent=featured.excerpt||"";
+    $("#lead-meta").innerHTML="<strong>"+esc(featured.paparazi_profiles?.display_name||"PAPARAZZI🇬🇲")
+      +"</strong><span>•</span><span>"+fmtDate(featured.published_at||featured.created_at)+"</span>";
+    $("#lead-link").href="story.html?slug="+encodeURIComponent(featured.slug);
+
+    const visual=$("#lead-visual");
+    visual.classList.toggle("has-image",Boolean(featured.cover_url));
+    visual.innerHTML=coverImage(featured.cover_url,featured.title,"eager")
+      +"<div class='visual-noise'></div><div class='visual-label'>"+esc(featured.category||"PAPARAZZI")
+      +"</div><span class='visual-number'>01</span>";
+
+    $("#hero-rail-list").innerHTML=stories.slice(1,4).map(railItem).join("");
+    $("#latest-grid").innerHTML=stories.slice(1).map(latestItem).join("");
+
+    $("#ticker-track").textContent=usingStarter
+      ?"The newsroom is open — send a tip, become a contributor or read the first page."
+      :stories.slice(0,4).map(x=>x.title).join("  •  ");
+
+    $("#latest-subtitle").textContent=usingStarter
+      ?"Start here, then come back for the community's first stories."
+      :"Fresh eyes. Local ears. New stories from the PAPARAZZI newsroom.";
   }
 
   async function initStory(){
     const root=$("#story-root");
     if(!root)return;
+
     const slug=new URLSearchParams(location.search).get("slug")||"welcome-to-paparazzi";
     let story=null;
 
     if(supabase){
-      const r=await supabase.from("paparazi_articles")
-        .select("id,title,slug,excerpt,body,cover_url,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
-        .eq("slug",slug).eq("status","published").maybeSingle();
-      story=r.data;
+      try{
+        const result=await withTimeout(
+          supabase.from("paparazi_articles")
+            .select("id,title,slug,excerpt,body,cover_url,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
+            .eq("slug",slug)
+            .eq("status","published")
+            .maybeSingle(),
+          4500,
+          null
+        );
+        story=result?.data||null;
+      }catch(_){}
     }
-    if(!story&&slug===seed.slug)story=seed;
+
+    if(!story)story=starterStories.find(item=>item.slug===slug)||null;
 
     if(!story){
-      root.innerHTML="<div class='container'><div class='empty-state' style='margin:60px 0'><h3>That story has left the timeline.</h3><p>Try the latest stories instead.</p><a class='btn btn-dark' href='index.html'>Back home</a></div></div>";
+      root.innerHTML="<div class='container'><div class='empty-state' style='margin:60px 0'><h3>That story has left the timeline.</h3><p>Try the latest stories instead.</p><a class='btn btn-dark' href='index.html#latest'>Back to latest</a></div></div>";
       return;
     }
 
     const author=story.paparazi_profiles||story.author||{};
     const body=String(story.body||"").split(/\n\s*\n/).map(p=>"<p>"+esc(p).replace(/\n/g,"<br>")+"</p>").join("");
-    root.innerHTML="<div class='container story-reader'><div class='story-reader-head'><div class='kicker'>"+
-      esc(story.category||"Story")+"</div><h1>"+esc(story.title)+"</h1><p class='story-dek'>"+
-      esc(story.excerpt||"")+"</p><div class='meta' style='margin-top:18px'><strong>"+
-      esc(author.display_name||"PAPARAZZI🇬🇲")+"</strong><span>•</span><span>"+
-      fmtDate(story.published_at||story.created_at)+"</span></div></div><div class='story-cover'><div class='cover-inner'><div class='cover-words'>"+
-      esc(story.title)+"</div></div></div><div class='story-body'>"+body+"</div><div class='author-box'><div class='avatar'>"+
-      esc(initials(author.display_name||"PAPARAZZI"))+"</div><div><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")+
-      "</strong><div style='color:#7f786f;font-size:.82rem'>@"+esc(author.username||"paparazzigambia")+
-      " · PAPARAZZI newsroom</div></div></div></div>";
+    const image=story.cover_url?coverImage(story.cover_url,story.title,"eager"):"";
+
+    root.innerHTML="<div class='container story-reader'>"
+      +"<div class='story-reader-head'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
+      +"<h1>"+esc(story.title)+"</h1><p class='story-dek'>"+esc(story.excerpt||"")+"</p>"
+      +"<div class='meta' style='margin-top:18px'><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")
+      +"</strong><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
+      +"<div class='story-cover'>"+image+"<div class='cover-inner'><div class='cover-words'>"+esc(story.title)
+      +"</div></div></div><div class='story-body'>"+body+"</div>"
+      +"<div class='author-box'><div class='avatar'>"+esc(initials(author.display_name||"PAPARAZZI"))
+      +"</div><div><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")+"</strong>"
+      +"<div style='color:#7f786f;font-size:.82rem'>@"+esc(author.username||"paparazzigambia")
+      +" · PAPARAZZI newsroom</div></div></div>"
+      +"<div class='story-next'><a class='btn btn-ghost' href='index.html#latest'>← Back to latest</a>"
+      +"<a class='btn btn-dark' href='submit.html'>Send a tip →</a></div></div>";
+
     document.title=story.title+" — PAPARAZZI🇬🇲";
   }
 
   async function initJoin(){
-    const signIn=$("#sign-in-form"),signUp=$("#sign-up-form");
+    const signIn=$("#sign-in-form");
+    const signUp=$("#sign-up-form");
     if(!signIn||!signUp)return;
 
     const tabs=$$(".switcher button");
-    const setMode=(mode)=>{
-      tabs.forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
+    const setMode=mode=>{
+      tabs.forEach(button=>button.classList.toggle("active",button.dataset.mode===mode));
       signIn.style.display=mode==="signin"?"":"none";
       signUp.style.display=mode==="signup"?"":"none";
     };
-    tabs.forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
+
+    tabs.forEach(button=>button.addEventListener("click",()=>setMode(button.dataset.mode)));
     setMode("signin");
 
     if(!supabase){
@@ -223,11 +363,20 @@
     signIn.addEventListener("submit",async e=>{
       e.preventDefault();
       const box=$("#sign-in-status");
-      const r=await supabase.auth.signInWithPassword({
-        email:$("#signin-email").value.trim(),
-        password:$("#signin-password").value
-      });
-      if(r.error){setStatus(box,r.error.message.includes("Invalid login")?"That email or password didn't match. Try again.":r.error.message,"error");return;}
+      const result=await withTimeout(
+        supabase.auth.signInWithPassword({
+          email:$("#signin-email").value.trim(),
+          password:$("#signin-password").value
+        }),
+        8000,
+        {error:{message:"The sign-in service took too long to respond. Try again."}}
+      );
+      if(result?.error){
+        setStatus(box,result.error.message.includes("Invalid login")
+          ?"That email or password didn't match. Try again."
+          :result.error.message,"error");
+        return;
+      }
       setStatus(box,"You're in. Taking you to the newsroom…","ok");
       setTimeout(()=>location.href="studio.html",450);
     });
@@ -238,18 +387,34 @@
       const name=$("#signup-name").value.trim();
       const email=$("#signup-email").value.trim();
       const password=$("#signup-password").value;
-      if(password!==$("#signup-confirm").value){setStatus(box,"Your passwords don't match yet.","error");return;}
-      if(password.length<8){setStatus(box,"Use at least 8 characters for the password.","error");return;}
 
-      const r=await supabase.auth.signUp({email,password});
-      if(r.error){setStatus(box,r.error.message,"error");return;}
-      if(r.data.user&&Array.isArray(r.data.user.identities)&&r.data.user.identities.length===0){
-        setStatus(box,"That account already exists. Sign in instead.","error");return;
+      if(password!==$("#signup-confirm").value){
+        setStatus(box,"Your passwords don't match yet.","error");
+        return;
+      }
+      if(password.length<8){
+        setStatus(box,"Use at least 8 characters for the password.","error");
+        return;
       }
 
-      if(r.data.session){
-        const p=await ensureProfile(r.data.user);
-        if(p&&name&&p.display_name!==name)await supabase.from("paparazi_profiles").update({display_name:name}).eq("id",r.data.user.id);
+      const result=await withTimeout(
+        supabase.auth.signUp({email,password}),
+        8000,
+        {error:{message:"The sign-up service took too long to respond. Try again."}}
+      );
+
+      if(result?.error){setStatus(box,result.error.message,"error");return;}
+
+      if(result?.data?.user&&Array.isArray(result.data.user.identities)&&result.data.user.identities.length===0){
+        setStatus(box,"That account already exists. Sign in instead.","error");
+        return;
+      }
+
+      if(result?.data?.session){
+        const profile=await ensureProfile(result.data.user);
+        if(profile&&name&&profile.display_name!==name){
+          await supabase.from("paparazi_profiles").update({display_name:name}).eq("id",result.data.user.id);
+        }
         setStatus(box,"Account created. Welcome to PAPARAZZI.","ok");
         setTimeout(()=>location.href="studio.html",500);
       }else{
@@ -257,34 +422,53 @@
       }
     });
 
-    $("#reset-password").addEventListener("click",async()=>{
+    const reset=$("#reset-password");
+    if(reset)reset.addEventListener("click",async()=>{
       const email=$("#signin-email").value.trim();
       const box=$("#sign-in-status");
-      if(!email){setStatus(box,"Enter your email first, then tap forgot password.","error");return;}
-      const r=await supabase.auth.resetPasswordForEmail(email);
-      setStatus(box,r.error?r.error.message:"Password reset instructions have been sent to your email.",r.error?"error":"ok");
+      if(!email){
+        setStatus(box,"Enter your email first, then tap forgot password.","error");
+        return;
+      }
+      const result=await withTimeout(
+        supabase.auth.resetPasswordForEmail(email),
+        8000,
+        {error:{message:"The reset service took too long to respond. Try again."}}
+      );
+      setStatus(box,
+        result?.error?.message||"Password reset instructions have been sent to your email.",
+        result?.error?"error":"ok"
+      );
     });
   }
 
   async function loadMyArticles(uid){
     const box=$("#my-articles");
     if(!box||!supabase)return;
-    const r=await supabase.from("paparazi_articles").select("*").eq("author_id",uid).order("created_at",{ascending:false}).limit(20);
-    if(r.error||!r.data?.length){
+
+    const result=await withTimeout(
+      supabase.from("paparazi_articles").select("*").eq("author_id",uid).order("created_at",{ascending:false}).limit(20),
+      5000,
+      {data:[],error:{message:"timeout"}}
+    );
+
+    if(result?.error||!result?.data?.length){
       box.innerHTML="<div class='empty-state'><h3>Your first story is still waiting.</h3><p>Write something only someone on the ground would know.</p></div>";
       return;
     }
-    box.innerHTML=r.data.map(item=>"<div class='article-item'><div><strong>"+esc(item.title)+
-      "</strong><div class='meta' style='margin-top:5px'><span>"+esc(item.category)+
-      "</span><span>•</span><span>"+fmtDate(item.created_at)+"</span></div></div><span class='status "+
-      esc(item.status)+"'>"+esc(item.status)+"</span></div>").join("");
+
+    box.innerHTML=result.data.map(item=>"<div class='article-item'><div><strong>"+esc(item.title)
+      +"</strong><div class='meta' style='margin-top:5px'><span>"+esc(item.category||"Story")
+      +"</span><span>•</span><span>"+fmtDate(item.published_at||item.created_at)
+      +"</span></div></div><span class='status "+esc(item.status)+"'>"+esc(item.status)+"</span></div>").join("");
   }
 
   async function initStudio(){
-    const gate=$("#studio-gate"),app=$("#studio-app");
+    const gate=$("#studio-gate");
+    const app=$("#studio-app");
     if(!gate||!app)return;
-    const session=await currentSession();
 
+    const session=await currentSession();
     if(!session){
       gate.style.display="";
       app.style.display="none";
@@ -293,6 +477,7 @@
 
     gate.style.display="none";
     app.style.display="";
+
     const user=session.user;
     let profile=await ensureProfile(user);
 
@@ -302,42 +487,69 @@
     $("#paparazzi-status").textContent=profile?.is_paparazzi?"PAPARAZZI contributor":"Reader";
 
     const joinBtn=$("#become-paparazzi");
-    joinBtn.textContent=profile?.is_paparazzi?"You're a PAPARAZZI ✓":"Become a PAPARAZZI";
-    joinBtn.disabled=!!profile?.is_paparazzi;
+    if(joinBtn){
+      joinBtn.textContent=profile?.is_paparazzi?"You're a PAPARAZZI ✓":"Become a PAPARAZZI";
+      joinBtn.disabled=!!profile?.is_paparazzi;
 
-    joinBtn.onclick=async()=>{
-      const r=await supabase.from("paparazi_profiles").update({is_paparazzi:true}).eq("id",user.id);
-      if(r.error){toast(r.error.message,"error");return;}
-      profile={...profile,is_paparazzi:true};
-      $("#paparazzi-status").textContent="PAPARAZZI contributor";
-      joinBtn.textContent="You're a PAPARAZZI ✓";
-      joinBtn.disabled=true;
-      toast("Welcome to the newsroom.");
-    };
+      joinBtn.onclick=async()=>{
+        const result=await supabase.from("paparazi_profiles").update({is_paparazzi:true}).eq("id",user.id);
+        if(result.error){toast(result.error.message,"error");return;}
+        profile={...profile,is_paparazzi:true};
+        $("#paparazzi-status").textContent="PAPARAZZI contributor";
+        joinBtn.textContent="You're a PAPARAZZI ✓";
+        joinBtn.disabled=true;
+        toast("Welcome to the newsroom.");
+      };
+    }
 
-    $("#sign-out").addEventListener("click",async()=>{await supabase.auth.signOut();location.href="index.html";});
+    const signOut=$("#sign-out");
+    if(signOut)signOut.addEventListener("click",async()=>{
+      await supabase.auth.signOut();
+      location.href="index.html";
+    });
 
-    $("#article-form").addEventListener("submit",async e=>{
+    const form=$("#article-form");
+    if(form)form.addEventListener("submit",async e=>{
       e.preventDefault();
-      if(!profile?.is_paparazzi){toast("Join the PAPARAZZI contributor crew first.","error");return;}
+
+      if(!profile?.is_paparazzi){
+        toast("Join the PAPARAZZI contributor crew first.","error");
+        return;
+      }
+
       const title=$("#article-title").value.trim();
       const category=$("#article-category").value;
       const excerpt=$("#article-excerpt").value.trim();
       const body=$("#article-body").value.trim();
       const cover=$("#article-cover").value.trim()||null;
 
-      if(body.length<20){toast("Give the story a little more room to breathe.","error");return;}
+      if(body.length<20){
+        toast("Give the story a little more room to breathe.","error");
+        return;
+      }
 
       let slug=slugify(title)||"story";
-      const same=await supabase.from("paparazi_articles").select("id").eq("slug",slug).maybeSingle();
-      if(same.data)slug=slug+"-"+Math.random().toString(36).slice(2,7);
+      const duplicate=await supabase.from("paparazi_articles").select("id").eq("slug",slug).maybeSingle();
+      if(duplicate.data)slug=slug+"-"+Math.random().toString(36).slice(2,7);
 
-      const r=await supabase.from("paparazi_articles").insert({
-        author_id:user.id,title,slug,excerpt,body,cover_url:cover,category,status:"published"
+      const result=await supabase.from("paparazi_articles").insert({
+        author_id:user.id,
+        title,
+        slug,
+        excerpt,
+        body,
+        cover_url:cover,
+        category,
+        status:"published",
+        published_at:new Date().toISOString()
       });
 
-      if(r.error){toast(r.error.message,"error");return;}
-      $("#article-form").reset();
+      if(result.error){
+        toast(result.error.message,"error");
+        return;
+      }
+
+      form.reset();
       toast("Published. Now go tell the timeline.");
       loadMyArticles(user.id);
     });
@@ -349,19 +561,25 @@
     const form=$("#tip-form");
     if(!form)return;
 
-    const anonymous=$("#tip-anonymous"),identity=$("#tip-identity");
+    const anonymous=$("#tip-anonymous");
+    const identity=$("#tip-identity");
+    if(!anonymous||!identity)return;
+
     const sync=()=>identity.style.display=anonymous.checked?"none":"grid";
     anonymous.addEventListener("change",sync);
     sync();
 
     form.addEventListener("submit",async e=>{
       e.preventDefault();
-      if($("#website-check").value)return;
-      if(!supabase){setStatus($("#tip-status"),"The tip line is temporarily unavailable.","error");return;}
 
-      const session=await currentSession();
+      if($("#website-check")?.value)return;
+      if(!supabase){
+        setStatus($("#tip-status"),"The tip line is temporarily unavailable.","error");
+        return;
+      }
+
       const payload={
-        submitter_user_id:anonymous.checked?null:(session?.user?.id||null),
+        submitter_user_id:anonymous.checked?null:((await currentSession())?.user?.id||null),
         is_anonymous:anonymous.checked,
         submitter_name:anonymous.checked?null:$("#tip-name").value.trim(),
         submitter_email:anonymous.checked?null:$("#tip-email").value.trim(),
@@ -372,33 +590,48 @@
         media_url:$("#tip-media").value.trim()||null
       };
 
-      if(payload.story.length<10){setStatus($("#tip-status"),"Tell us what happened first.","error");return;}
+      if(payload.story.length<10){
+        setStatus($("#tip-status"),"Tell us what happened first.","error");
+        return;
+      }
 
-      const r=await supabase.from("paparazi_submissions").insert(payload).select("id").single();
-      if(r.error){setStatus($("#tip-status"),r.error.message,"error");return;}
+      const result=await withTimeout(
+        supabase.from("paparazi_submissions").insert(payload).select("id").single(),
+        8000,
+        {error:{message:"The tip line took too long to respond. Try again."}}
+      );
+
+      if(result?.error){
+        setStatus($("#tip-status"),result.error.message,"error");
+        return;
+      }
 
       form.reset();
       anonymous.checked=true;
       sync();
-      setStatus($("#tip-status"),"Tip received. Keep this reference: "+(r.data?.id?String(r.data.id).slice(0,8).toUpperCase():"RECEIVED")+".","ok");
+      setStatus($("#tip-status"),
+        "Tip received. Keep this reference: "+(result?.data?.id?String(result.data.id).slice(0,8).toUpperCase():"RECEIVED")+".",
+        "ok"
+      );
     });
   }
 
   document.addEventListener("DOMContentLoaded",async()=>{
-    emergencyHideSplash();
+    hideSplash();
     try{
-      
       await initShell();
+
       const page=document.body.dataset.page;
       if(page==="home")await initHome();
       if(page==="story")await initStory();
       if(page==="join")await initJoin();
       if(page==="studio")await initStudio();
       if(page==="submit")await initSubmit();
+
+      hideSplash();
     }catch(error){
       console.error("PAPARAZZI startup error:",error);
-      const splash=$(".splash");
-      if(splash)splash.classList.add("is-hidden");
+      hideSplash();
       toast("PAPARAZZI loaded with a temporary service issue.","error");
     }
   });
