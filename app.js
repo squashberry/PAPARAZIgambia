@@ -36,6 +36,8 @@
     return new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"short",year:"numeric"}).format(date);
   };
 
+  const authorHref=username=>username?"author.html?u="+encodeURIComponent(username):"join.html";
+
   const initials=name=>{
     const parts=String(name||"PAPARAZZI").trim().split(/\s+/).filter(Boolean);
     return (parts.slice(0,2).map(x=>x[0]).join("")||"P").toUpperCase();
@@ -368,7 +370,7 @@
     if(!account)return;
     if(session){
       account.textContent=profile?.is_paparazzi?"STUDIO":"BECOME PAPARAZZI";
-      account.href="studio.html";
+      account.href=profile?.is_paparazzi?"studio.html":"become-paparazzi.html";
     }else{
       account.textContent="SIGN IN";
       account.href="join.html";
@@ -487,7 +489,7 @@
       +"<div class='rail-thumb'>"+coverImage(story.cover_url,story.title)+"</div>"
       +"<div><div class='kicker'>"+esc(story.category||"Story")+"</div>"
       +"<h3>"+esc(story.title)+"</h3>"
-      +"<div class='meta'><span>"+esc(author)+"</span><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div></a>";
+      +"<div class='meta'><a class='author-link' href='"+authorHref(story.paparazi_profiles?.username||story.author?.username)+"'>"+esc(author)+"</a><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div></a>";
   }
 
   function latestItem(story,index){
@@ -499,7 +501,7 @@
       +"<div class='latest-info'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
       +"<h3>"+esc(story.title)+"</h3>"
       +"<p>"+esc(story.excerpt||(story.body||"").slice(0,170))+"</p>"
-      +"<div class='meta' style='margin-top:10px'><strong>"+esc(author)+"</strong><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
+      +"<div class='meta' style='margin-top:10px'><a class='author-link' href='"+authorHref(story.paparazi_profiles?.username||story.author?.username)+"'><strong>"+esc(author)+"</strong></a><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
       +"<div class='latest-side'><div class='category'>"+esc(story.category||"Story")+"</div><span class='read'>READ →</span></div></a>";
   }
 
@@ -612,14 +614,14 @@
     root.innerHTML="<div class='container story-reader'>"
       +"<div class='story-reader-head'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
       +"<h1>"+esc(story.title)+"</h1><p class='story-dek'>"+esc(story.excerpt||"")+"</p>"
-      +"<div class='meta' style='margin-top:18px'><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")
+      +"<div class='meta' style='margin-top:18px'><a class='author-link' href='"+authorHref(author.username)+"'><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")
       +"</strong><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
       +"<div class='story-cover'>"+image+"<div class='cover-inner'><div class='cover-words'>"+esc(story.title)
       +"</div></div></div><div class='story-body'>"+body+"</div>"
-      +"<div class='author-box'><div class='avatar'>"+esc(initials(author.display_name||"PAPARAZZI"))
+      +"<a class='author-box' href='"+authorHref(author.username)+"'><div class='avatar'>"+esc(initials(author.display_name||"PAPARAZZI"))
       +"</div><div><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")+"</strong>"
       +"<div style='color:#7f786f;font-size:.82rem'>@"+esc(author.username||"paparazzigambia")
-      +" · PAPARAZZI newsroom</div></div></div>"
+      +" · PAPARAZZI newsroom</div></div></a>"
       +"<div class='story-next'><button id='share-story' class='btn btn-dark' type='button'>Share story →</button>"
       +"<a class='btn btn-ghost' href='index.html#latest'>← Back to latest</a>"
       +"<a class='btn btn-ghost' href='submit.html'>Send a tip →</a></div></div>";
@@ -714,7 +716,7 @@
       if(actions)actions.hidden=true;
       const success=$("#verification-success");
       if(success)success.hidden=false;
-      setTimeout(()=>location.href="studio.html",900);
+      setTimeout(()=>location.href="index.html?welcome=1",900);
     };
 
     const tabsReady=!!tabs.length;
@@ -825,9 +827,10 @@
           :result.error.message,"error");
         return;
       }
-      setStatus(box,"","");toast("Welcome back. Opening the newsroom.","success");
+      setStatus(box,"","");toast("Welcome back.","success");
       signIn.classList.add("auth-complete");
-      setTimeout(()=>location.href="studio.html",650);
+      const signedProfile=(await supabase.from("paparazi_profiles").select("*").eq("id",result.data?.user?.id).maybeSingle()).data;
+      setTimeout(()=>location.href=signedProfile?.is_paparazzi?"studio.html":"index.html?welcome=1",650);
     });
 
     signUp.addEventListener("submit",async e=>{
@@ -838,7 +841,7 @@
       if(password.length<8){setStatus(box,"Use at least 8 characters for the password.","error");return;}
       setStatus(box,"","");setBusy(button,true,"Creating your account…");
       const result=await withTimeout(
-        supabase.auth.signUp({email,password,name}),
+        supabase.auth.signUp({email,password,name,accepted_terms:$("#signup-terms")?.checked,accepted_privacy:$("#signup-terms")?.checked,accepted_community_rules:$("#signup-community")?.checked}),
         12000,
         {error:{message:"Account creation took too long. Try again."}}
       );
