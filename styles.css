@@ -28,3 +28,8 @@ main{min-height:70vh}.container{max-width:1280px;margin:auto;padding:0 24px}.her
 .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:100;background:#111;color:#fff;border:1px solid rgba(255,255,255,.12);padding:11px 14px;border-radius:999px;font-size:.8rem;font-weight:760;transition:.25s ease}.toast.show{opacity:1;transform:translate(-50%,0)}
 @media(max-width:960px){.hero-grid,.split-panel,.studio-grid,.featured-card{grid-template-columns:1fr}.hero{padding-top:54px}.hero-side{min-height:180px}.story-card{grid-column:span 6}.footer-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:720px){.container{padding:0 16px}.header-inner{padding:11px 16px}.nav{display:none}.menu-btn{display:block;margin-left:auto}.brand-copy .brand-sub{display:none}.hero h1{font-size:clamp(3.2rem,16vw,5.8rem)}.hero-grid{gap:26px}.featured-art{min-height:310px}.featured-copy{padding:28px}.story-card{grid-column:span 12}.form-row{grid-template-columns:1fr}.tip-banner-inner{padding:28px;align-items:flex-start;flex-direction:column}.footer-grid{grid-template-columns:1fr}.footer-bottom{flex-direction:column}.story-reader{padding-top:40px}.story-cover{min-height:330px;border-radius:22px}.story-body{font-size:1.06rem}}
+
+/* Startup safety: the page must never remain trapped behind the splash if JavaScript is delayed. */
+.splash{animation:splashFailsafe 1.35s forwards}
+.splash.is-hidden{animation:none}
+@keyframes splashFailsafe{0%,76%{opacity:1;visibility:visible;pointer-events:auto}100%{opacity:0;visibility:hidden;pointer-events:none}}
