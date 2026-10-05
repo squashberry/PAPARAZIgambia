@@ -619,7 +619,7 @@
       imageUrl:SITE_ORIGIN+"/og-image.svg"
     });
 
-    const result=await fetchStories(12);
+    const result=await fetchStories(50);
     const usingStarter=!result.data.length;
     const stories=(result.data.length?result.data:starterStories).map((item,index)=>({
       ...item,
@@ -644,7 +644,35 @@
       +"</div><span class='visual-number'>01</span>";
 
     $("#hero-rail-list").innerHTML=stories.slice(1,4).map(railItem).join("");
-    $("#latest-grid").innerHTML=stories.slice(1).map(latestItem).join("");
+    const latestStories=stories.slice(1);
+    const renderHomeLatest=(items,showAll=false)=>{
+      const grid=$("#latest-grid");
+      if(!grid)return;
+      const visible=showAll?items:items.slice(0,6);
+      grid.innerHTML=visible.map(latestItem).join("");
+      const more=$("#latest-more");
+      if(more){
+        more.hidden=items.length<=6;
+        more.textContent=showAll?"Show fewer stories ↑":"View more stories →";
+        more.dataset.expanded=showAll?"1":"0";
+      }
+    };
+    renderHomeLatest(latestStories,false);
+    const search=$("#home-search");
+    if(search){
+      search.addEventListener("input",()=>{
+        const q=search.value.trim().toLowerCase();
+        const filtered=!q?latestStories:latestStories.filter(item=>[item.title,item.excerpt,item.category,item.paparazi_profiles?.display_name].some(v=>String(v||"").toLowerCase().includes(q)));
+        renderHomeLatest(filtered,Boolean(q));
+        const sub=$("#latest-subtitle");
+        if(sub)sub.textContent=q?(filtered.length+" result"+(filtered.length===1?"":"s")+" for “"+q+"”"):(usingStarter?"Start here, then come back for the community's first stories.":"Fresh eyes. Local ears. New stories from the PAPARAZZI newsroom.");
+      });
+    }
+    const more=$("#latest-more");
+    if(more)more.onclick=()=>{
+      const expanded=more.dataset.expanded==="1";
+      renderHomeLatest(latestStories,!expanded);
+    };
 
     $("#ticker-track").textContent=usingStarter
       ?"The newsroom is open — send a tip, become a contributor or read the first page."
