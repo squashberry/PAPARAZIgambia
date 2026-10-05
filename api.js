@@ -15,6 +15,13 @@
     if(options.body !== undefined && !(options.body instanceof FormData)){
       headers.set("Content-Type","application/json");
     }
+
+    // Telegram Mini Apps do not reliably provide third-party cookies.
+    // Forward the signed init data so the API can authenticate the Telegram user
+    // without depending on a browser session cookie.
+    const telegramInitData=String(window.PAPARAZZI_TELEGRAM?.initData||"").trim();
+    if(telegramInitData)headers.set("X-Telegram-Init-Data",telegramInitData);
+
     if(options.write)headers.set("X-Paparazzi-Request","1");
 
     let response;
