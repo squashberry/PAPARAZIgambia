@@ -694,7 +694,7 @@
       try{
         const result=await withTimeout(
           supabase.from("paparazi_articles")
-            .select("id,title,slug,excerpt,body,cover_url,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
+            .select("id,title,slug,excerpt,body,cover_url,media_urls,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
             .eq("slug",slug)
             .eq("status","published")
             .maybeSingle(),
