@@ -644,7 +644,7 @@
       +"</div><span class='visual-number'>01</span>";
 
     $("#hero-rail-list").innerHTML=stories.slice(1,4).map(railItem).join("");
-    const latestStories=stories.slice(1);
+    const latestStories=stories.slice(1).filter(Boolean);
     const renderHomeLatest=(items,showAll=false)=>{
       const grid=$("#latest-grid");
       if(!grid)return;
