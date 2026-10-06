@@ -774,7 +774,7 @@
       });
     }
     const more=$("#latest-more");
-    if(more)more.onclick=()=>{
+    if(more && more.tagName==="BUTTON")more.onclick=()=>{
       const expanded=more.dataset.expanded==="1";
       renderHomeLatest(latestStories,!expanded);
     };
