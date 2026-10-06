@@ -90,9 +90,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
  (isAuthor
    ? "<section class='author-section'><div class='section-head'><div><div class='eyebrow'>THE ARCHIVE</div><h2>Stories by "+esc(displayName)+"</h2></div><span class='author-section-count'>"+articles.length+" "+(articles.length===1?"story":"stories")+"</span></div><div class='profile-story-grid'>"+(articles.length?articles.map(a=>storyCard(a)).join(""):"<div class='empty-state'><h3>No published stories yet.</h3><p>This contributor profile is ready for their first published story.</p></div>")+"</div></section>"
    : "")+
- (session
-   ? "<section class='author-section following-feed-section'><div class='section-head'><div><div class='eyebrow'>YOUR FOLLOWING FEED</div><h2>Posts from PAPARAZZI you follow</h2><p>"+(followedStories.length?"Fresh stories from the contributors in your following list.":"Follow contributors to build this part of your profile.")+"</p></div><a class='btn btn-ghost' href='index.html'>Discover contributors →</a></div><div class='profile-story-grid'>"+(followedStories.length?followedStories.map(a=>storyCard(a)).join(""):"<div class='empty-state'><h3>Your following feed is empty.</h3><p>Open a contributor profile and tap Follow. Their published posts will appear here.</p><a class='btn btn-dark' href='index.html#latest'>Browse the newsroom →</a></div>")+"</div></section>"
-   : "<section class='author-section following-feed-section'><div class='section-head'><div><div class='eyebrow'>PERSONAL NEWSROOM</div><h2>Build your following feed</h2><p>Sign in to follow PAPARAZZI contributors and see their new posts together in one place.</p></div><a class='btn btn-dark' href='join.html'>Sign in / create account →</a></div></section>");
+ <section class='author-section contributor-note'><div class='section-head'><div><div class='eyebrow'>COMMUNITY</div><h2>Follow PAPARAZZI contributors from their profiles.</h2><p>Your personal following feed belongs on your account profile.</p></div><a class='btn btn-ghost' href='profile.html'>Open my profile →</a></div></section>
 
  const follow=document.querySelector("#follow-author");
  if(follow){
