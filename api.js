@@ -241,10 +241,11 @@
 
 
 
-      async getArticles({authorId=null,status="published",limit=50}={}){
+      async getArticles({authorId=null,status="published",limit=50,tag=""}={}){
         const q=new URLSearchParams();
         if(authorId)q.set("author_id",authorId);
         if(status)q.set("status",status);
+        if(tag)q.set("tag",String(tag).replace(/^#/,""));
         q.set("limit",String(limit));
         return normalize(await request("/api/articles?"+q.toString()));
       },
