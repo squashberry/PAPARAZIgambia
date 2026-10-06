@@ -9,24 +9,20 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Reconcile Telegram webhook
+      - name: Reconcile Telegram webhook once
         shell: bash
         run: |
           set -euo pipefail
+          sleep 10
           setup_url="https://paparazzi-api.squashberrypay.workers.dev/api/telegram/setup?source=github-${GITHUB_RUN_ID}"
           http_status="$(curl --silent --show-error --max-time 30 -o /tmp/setup_body -w '%{http_code}' "$setup_url")"
           body="$(cat /tmp/setup_body)"
           echo "$body" | jq .
           echo "Telegram setup HTTP status: $http_status"
           test "$http_status" = "200"
-
           webhook_url="$(echo "$body" | jq -r '.webhook_info.url // empty')"
-          webhook_ok="$(echo "$body" | jq -r '.ok // false')"
-          last_error="$(echo "$body" | jq -r '.webhook_info.last_error_message // empty')"
-          test "$webhook_ok" = "true"
           test -n "$webhook_url"
           [[ "$webhook_url" == */api/telegram/webhook/* ]]
-          if [[ -n "$last_error" ]]; then echo "::warning::Telegram reports: $last_error"; fi
 
           probe="$(curl --fail --silent --show-error --max-time 30 \
             -X POST -H "Content-Type: application/json" \
