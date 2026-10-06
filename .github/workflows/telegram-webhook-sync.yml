@@ -14,14 +14,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          response="$(curl --fail --silent --show-error --max-time 30 \
+          response="$(curl --silent --show-error --max-time 30 -w '\\nHTTP_STATUS:%{http_code}' \
             "https://paparazzi-api.squashberrypay.workers.dev/api/telegram/setup?source=github-${GITHUB_RUN_ID}")"
 
-          echo "$response" | jq .
+          echo "$response"
+          http_status="$(printf '%s\\n' "$response" | sed -n 's/^HTTP_STATUS://p' | tail -1)"
+          body="$(printf '%s\\n' "$response" | sed '$d')"
+          test "$http_status" = "200" || { echo "Telegram setup returned HTTP $http_status"; exit 1; }
 
-          webhook_url="$(echo "$response" | jq -r '.webhook_info.url // empty')"
-          webhook_ok="$(echo "$response" | jq -r '.ok // false')"
-          last_error="$(echo "$response" | jq -r '.webhook_info.last_error_message // empty')"
+          webhook_url="$(echo "$body" | jq -r '.webhook_info.url // empty')"
+          webhook_ok="$(echo "$body" | jq -r '.ok // false')"
+          last_error="$(echo "$body" | jq -r '.webhook_info.last_error_message // empty')"
 
           test "$webhook_ok" = "true"
           test -n "$webhook_url"
@@ -33,9 +36,6 @@ jobs:
 
           echo "Telegram webhook reconciled: $webhook_url"
 
-          # Exercise the exact webhook URL Telegram uses.
-          # The synthetic chat id is intentionally invalid; the Worker must still
-          # acknowledge the update with HTTP 200 rather than returning 500.
           probe="$(curl --fail --silent --show-error --max-time 30 \
             -X POST \
             -H "Content-Type: application/json" \
