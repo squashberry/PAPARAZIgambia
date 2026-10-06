@@ -524,18 +524,22 @@
     }
   ];
 
-  async function fetchStories(limit=12){
+  async function fetchStories(limit=12,offset=0,filters={}){
     if(!supabase)return {data:[],error:null};
     try{
-      const result=await withTimeout(
-        supabase.from("paparazi_articles")
-          .select("id,title,slug,excerpt,body,cover_url,media_urls,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
-          .eq("status","published")
-          .order("published_at",{ascending:false,nullsFirst:false})
-          .limit(limit),
-        4500,
-        {data:[],error:{message:"timeout"}}
-      );
+      let query=supabase.from("paparazi_articles")
+        .select("id,title,slug,excerpt,body,cover_url,media_urls,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
+        .eq("status","published")
+        .order("published_at",{ascending:false,nullsFirst:false})
+        .range(Math.max(0,offset),Math.max(0,offset)+Math.max(1,limit)-1);
+      const category=String(filters.category||"").trim();
+      const search=String(filters.search||"").trim();
+      if(category && category.toLowerCase()!=="all")query=query.eq("category",category);
+      if(search){
+        const safe=search.replace(/[(),]/g," ").replace(/%/g,"\\%");
+        query=query.or("title.ilike.%"+safe+"%,excerpt.ilike.%"+safe+"%,body.ilike.%"+safe+"%,category.ilike.%"+safe+"%");
+      }
+      const result=await withTimeout(query,5000,{data:[],error:{message:"timeout"}});
       return {data:result?.data||[],error:result?.error||null};
     }catch(error){
       return {data:[],error};
@@ -636,6 +640,68 @@
     window.addEventListener("resize",syncHeight,{passive:true});
     window.addEventListener("scroll",check,{passive:true});
     requestAnimationFrame(check);
+  }
+
+  async function initNewsroom(){
+    const root=$("#newsroom-root");
+    if(!root)return;
+
+    updateSocialMeta({
+      title:"Newsroom — PAPARAZZI🇬🇲",
+      description:"Every published PAPARAZZI🇬🇲 story in one newsroom. Search, filter and keep scrolling.",
+      url:SITE_ORIGIN+"/newsroom.html",
+      image:SITE_ORIGIN+"/og-image.svg",
+      type:"website"
+    });
+
+    const grid=$("#newsroom-grid"),sentinel=$("#newsroom-sentinel"),search=$("#newsroom-search");
+    const categorySelect=$("#newsroom-category"),count=$("#newsroom-count"),status=$("#newsroom-status"),moreStatus=$("#newsroom-more-status");
+    let offset=0,loading=false,done=false,requestToken=0,searchTimer=null;
+
+    const state=()=>({search:search?.value.trim()||"",category:categorySelect?.value||"all"});
+    const normalize=story=>({...story,
+      published_at:story.published_at||story.created_at||new Date().toISOString(),
+      created_at:story.created_at||story.published_at||new Date().toISOString(),
+      paparazi_profiles:story.paparazi_profiles||story.author
+    });
+    const categories=["People","Events","Nightlife","Style","Culture","Viral"];
+    if(categorySelect)categorySelect.innerHTML='<option value="all">All beats</option>'+categories.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+
+    const loadMore=async(reset=false)=>{
+      if(loading||(!reset&&done))return;
+      loading=true;
+      const token=++requestToken;
+      if(reset){offset=0;done=false;grid.innerHTML="";if(status)status.textContent="Loading the newsroom…";}
+      else if(moreStatus)moreStatus.textContent="Loading more stories…";
+      const result=await fetchStories(12,offset,state());
+      if(token!==requestToken)return;
+      const stories=(result.data||[]).map(normalize);
+      grid.insertAdjacentHTML("beforeend",stories.map((story,i)=>latestItem(story,offset+i)).join(""));
+      installImageWatermarks(grid);
+      offset+=stories.length;
+      done=stories.length<12;
+      loading=false;
+      if(count)count.textContent=offset+" stor"+(offset===1?"y":"ies")+" loaded";
+      if(status)status.textContent=done?(offset?"You've reached the end of the newsroom.":"No stories match those filters."):"Keep scrolling to load more.";
+      if(moreStatus)moreStatus.textContent=done?"End of newsroom":"Scroll for more";
+    };
+
+    const resetAndLoad=()=>{
+      clearTimeout(searchTimer);
+      searchTimer=setTimeout(()=>loadMore(true),220);
+    };
+    search?.addEventListener("input",resetAndLoad);
+    categorySelect?.addEventListener("change",()=>loadMore(true));
+
+    if("IntersectionObserver" in window&&sentinel){
+      const observer=new IntersectionObserver(entries=>{
+        if(entries.some(e=>e.isIntersecting))loadMore(false);
+      },{rootMargin:"900px 0px"});
+      observer.observe(sentinel);
+    }else{
+      window.addEventListener("scroll",()=>{if(window.innerHeight+window.scrollY>=document.body.offsetHeight-1200)loadMore(false)},{passive:true});
+    }
+    await loadMore(true);
   }
 
   async function initHome(){
@@ -1436,6 +1502,7 @@
     try{
       const page=document.body.dataset.page;
       if(page==="home")await initHome();
+      if(page==="newsroom")await initNewsroom();
       if(page==="story")await initStory();
       if(page==="join")await initJoin();
       if(page==="studio")await initStudio();
