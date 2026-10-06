@@ -1440,7 +1440,19 @@
     if(reset)reset.addEventListener("click",async()=>{
       const email=$("#signin-email").value.trim(),box=$("#sign-in-status");
       if(!email){setStatus(box,"Enter your email first, then tap forgot password.","error");return;}
-      setStatus(box,"Password recovery isn't available yet. Your account is safe; use your existing password for now.","error");
+      setStatus(box,"Sending a password reset link…","");
+      setBusy(reset,true,"Sending…");
+      const result=await withTimeout(
+        supabase.auth.resetPasswordForEmail(email),
+        10000,
+        {error:{message:"Password recovery took too long. Try again."}}
+      );
+      setBusy(reset,false);
+      if(result?.error){
+        setStatus(box,result.error.message||"We couldn't send the reset link.","error");
+        return;
+      }
+      setStatus(box,"Password reset instructions are on their way. Check your inbox.","ok");
     });
   }
 
