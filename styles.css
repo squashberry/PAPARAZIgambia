@@ -589,3 +589,17 @@ body.menu-open{touch-action:none}
  .profile-story-copy{padding:2px 3px 2px 0}
  .profile-story-meta{font-size:.55rem}
 }
+
+/* PAPARAZZI personal profile feed v33 */
+.profile-following-posts-panel{grid-column:1/-1;margin-bottom:18px}
+.profile-following-posts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.profile-feed-post{display:grid;grid-template-columns:116px minmax(0,1fr);gap:14px;padding:10px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.55);min-width:0}
+.profile-feed-post:hover{background:#fff}
+.profile-feed-thumb{height:116px;border-radius:11px;background:#151515;overflow:hidden}
+.profile-feed-thumb img{width:100%;height:100%;object-fit:cover}
+.profile-feed-post>div:last-child{min-width:0;padding:3px 4px 3px 0}
+.profile-feed-meta{font-size:.6rem;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile-feed-post h3{font-family:Georgia,serif;font-size:1.25rem;line-height:.98;letter-spacing:-.04em;margin:6px 0}
+.profile-feed-post p{font-size:.76rem;color:#6b655e;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0}
+.profile-feed-post span{display:block;font-size:.58rem;font-weight:950;letter-spacing:.1em;margin-top:9px}
+@media(max-width:720px){.profile-following-posts{grid-template-columns:1fr}.profile-feed-post{grid-template-columns:88px minmax(0,1fr);gap:11px}.profile-feed-thumb{height:88px}.profile-feed-post h3{font-size:1.05rem}.profile-feed-post p{font-size:.68rem}}
