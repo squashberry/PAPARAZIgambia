@@ -241,12 +241,13 @@
 
 
 
-      async getArticles({authorId=null,status="published",limit=50,tag="",offset=0}={}){
+      async getArticles({authorId=null,status="published",limit=50,tag="",offset=0,category=""}={}){
         const q=new URLSearchParams();
         if(authorId)q.set("author_id",authorId);
         if(status)q.set("status",status);
         if(tag)q.set("tag",String(tag).replace(/^#/,""));
         if(offset)q.set("offset",String(Math.max(0,Number(offset)||0)));
+        if(category && String(category).toLowerCase()!=="all")q.set("category",String(category));
         q.set("limit",String(limit));
         return normalize(await request("/api/articles?"+q.toString()));
       },
