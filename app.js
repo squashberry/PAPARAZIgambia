@@ -945,6 +945,53 @@
     const gallery=mediaUrls.length>1?"<div class='story-gallery'>"+mediaUrls.map((url,index)=>"<figure class='story-gallery-item'><span class='pz-media' data-pz-watermark><img loading='lazy' referrerpolicy='no-referrer' src='"+esc(url)+"' alt='"+esc(story.title+" — image "+(index+1))+"'><span class='pz-watermark' aria-hidden='true'>PAPARAZZI</span></span><figcaption>PHOTO "+String(index+1).padStart(2,"0")+"</figcaption></figure>").join("")+"</div>":"";
 
     const storyUrl=SITE_ORIGIN+"/story.html?slug="+encodeURIComponent(story.slug);
+    const savedKey="paparazzi_saved_stories";
+    const isSaved=()=>{try{return JSON.parse(localStorage.getItem(savedKey)||"[]").includes(String(story.id||story.slug));}catch(_){return false;}};
+    const toggleSaved=()=>{
+      const key=String(story.id||story.slug); let list=[];
+      try{list=JSON.parse(localStorage.getItem(savedKey)||"[]");}catch(_){}
+      if(list.includes(key))list=list.filter(x=>x!==key);else list.unshift(key);
+      try{localStorage.setItem(savedKey,JSON.stringify(list.slice(0,200)));}catch(_){}
+      return list.includes(key);
+    };
+    const requireAccount=async action=>{
+      const session=await currentSession(); if(session)return session;
+      let modal=$("#story-action-modal");
+      if(!modal){modal=document.createElement("div");modal.id="story-action-modal";modal.className="modal-backdrop";document.body.appendChild(modal);}
+      modal.innerHTML="<div class='modal-card story-action-card' role='dialog' aria-modal='true'><button class='modal-close' type='button' aria-label='Close'>×</button><div class='eyebrow'>ACCOUNT REQUIRED</div><h2>"+esc(action)+"</h2><p>You need any PAPARAZZI account to use this feature. You can sign in or create a free account in seconds.</p><div class='form-actions'><a class='btn btn-dark' href='join.html?next="+encodeURIComponent(location.href)+"'>Sign in / create account →</a></div></div>";
+      modal.classList.add("is-open");
+      modal.querySelector(".modal-close").onclick=()=>modal.classList.remove("is-open");
+      modal.onclick=e=>{if(e.target===modal)modal.classList.remove("is-open");};
+      return null;
+    };
+    const openStoryActionModal=async type=>{
+      if(type==="save"){
+        const session=await requireAccount("Save this story"); if(!session)return;
+        const saved=toggleSaved(),btn=$("#story-save-action");
+        if(btn)btn.textContent=saved?"✓ Saved":"♡ Save";
+        toast(saved?"Story saved to your PAPARAZZI saves.":"Story removed from your saves.","success"); return;
+      }
+      const session=await requireAccount(type==="takedown"?"Request a takedown":"Request a correction"); if(!session)return;
+      let modal=$("#story-action-modal");
+      if(!modal){modal=document.createElement("div");modal.id="story-action-modal";modal.className="modal-backdrop";document.body.appendChild(modal);}
+      const isTakedown=type==="takedown";
+      modal.innerHTML="<div class='modal-card story-action-card' role='dialog' aria-modal='true' aria-labelledby='story-action-title'><button class='modal-close' type='button' aria-label='Close'>×</button><div class='eyebrow'>NEWSROOM REVIEW</div><h2 id='story-action-title'>"+(isTakedown?"Request a takedown":"Request a correction")+"</h2><p>"+(isTakedown?"Tell the PAPARAZZI review team why this story should be taken down.":"Point out what you believe is inaccurate and tell the newsroom what should be corrected.")+"</p><label class='field-label' for='story-action-reason'>Reason</label><textarea id='story-action-reason' rows='5' maxlength='2000' placeholder='"+(isTakedown?"Explain the issue clearly…":"What is wrong, and what should it say instead?")+"'></textarea><div id='story-action-status' class='form-status' aria-live='polite'></div><div class='form-actions'><button class='btn btn-ghost modal-cancel' type='button'>Cancel</button><button id='story-action-submit' class='btn btn-dark' type='button'>Send for review →</button></div></div>";
+      modal.classList.add("is-open");
+      const close=()=>modal.classList.remove("is-open");
+      modal.querySelector(".modal-close").onclick=close; modal.querySelector(".modal-cancel").onclick=close; modal.onclick=e=>{if(e.target===modal)close();};
+      modal.querySelector("#story-action-submit").onclick=async()=>{
+        const reason=$("#story-action-reason")?.value.trim(),status=$("#story-action-status"),submit=$("#story-action-submit");
+        if(!reason){if(status){status.textContent="Please explain the issue first.";status.className="form-status error";}return;}
+        submit.disabled=true;submit.textContent="Sending…";
+        const payload={category:isTakedown?"Story takedown request":"Story correction request",title:story.title,story:reason,location:storyUrl,submitter_user_id:session.user?.id||null,submitter_name:session.user?.email||"PAPARAZZI account",submitter_email:session.user?.email||null,is_anonymous:false,article_id:story.id||null,request_type:isTakedown?"takedown":"correction"};
+        try{
+          const result=await apiCall("/api/submissions",{method:"POST",body:JSON.stringify(payload),write:true});
+          if(result?.error)throw new Error(result.error.message||"We couldn't send the request.");
+          if(status){status.textContent="Sent. Other PAPARAZZI contributors can now review it, and the story owner will be notified.";status.className="form-status success";}
+          submit.textContent="Sent ✓"; setTimeout(close,1200);
+        }catch(error){if(status){status.textContent=error.message||"We couldn't send the request. Try again.";status.className="form-status error";}submit.disabled=false;submit.textContent="Send for review →";}
+      };
+    };
     const shareUrl=location.href;
     const storyImage=primaryImage||SITE_ORIGIN+"/og-image.svg";
     const storyDescription=story.excerpt||String(story.body||"").slice(0,180);
@@ -963,7 +1010,7 @@
     installArticleSchema(story,author,storyUrl,storyImage);
 
     root.innerHTML="<div class='container story-reader'>"
-      +"<div class='story-reader-head'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
+      +"<div class='story-reader-head'><div class='story-head-row'><div><div class='kicker'>"+esc(story.category||"Story")+"</div></div><div class='story-overflow-wrap'><button id='story-overflow' class='story-overflow' type='button' aria-label='Story options' aria-expanded='false'><span></span><span></span><span></span></button><div id='story-overflow-menu' class='story-overflow-menu' hidden><button type='button' data-story-action='share'>Share story</button><button id='story-save-action' type='button' data-story-action='save'>"+(isSaved()?"✓ Saved":"♡ Save")+"</button><a href='"+authorHref(author.username)+"'>View PAPARAZZI</a><button type='button' data-story-action='takedown'>Request takedown</button><button type='button' data-story-action='correction'>Request correction</button></div></div></div>"
       +"<h1>"+esc(story.title)+"</h1><p class='story-dek'>"+esc(story.excerpt||"")+"</p>"
       +(Array.isArray(story.hashtags)&&story.hashtags.length?"<div class='story-tags story-tags-large'>"+story.hashtags.map(t=>"<a href='newsroom.html?tag="+encodeURIComponent(t.replace(/^#/,""))+"'>"+esc(t.startsWith("#")?t:"#"+t)+"</a>").join("")+"</div>":"")
       +"<div class='meta' style='margin-top:18px'><a class='author-link' href='"+authorHref(author.username)+"'><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")
@@ -977,6 +1024,16 @@
       +"<div class='story-next'><button id='share-story' class='btn btn-dark' type='button'>Share story →</button>"
       +"<a class='btn btn-ghost' href='index.html#latest'>← Back to latest</a>"
       +"<a class='btn btn-ghost' href='submit.html'>Tell Paparazzi →</a></div></div>";
+
+    const overflow=$("#story-overflow"),overflowMenu=$("#story-overflow-menu");
+    if(overflow&&overflowMenu){
+      overflow.onclick=e=>{e.stopPropagation();const open=!overflowMenu.hidden;overflowMenu.hidden=open;overflow.setAttribute("aria-expanded",String(!open));};
+      document.addEventListener("click",e=>{if(!overflowMenu.contains(e.target)&&e.target!==overflow){overflowMenu.hidden=true;overflow.setAttribute("aria-expanded","false");}});
+      overflowMenu.querySelector("[data-story-action='share']")?.addEventListener("click",()=>{overflowMenu.hidden=true;shareContent({title:story.title,text:storyDescription,url:shareUrl,imageUrl:primaryImage||null});});
+      overflowMenu.querySelector("[data-story-action='save']")?.addEventListener("click",async()=>{overflowMenu.hidden=true;await openStoryActionModal("save");});
+      overflowMenu.querySelector("[data-story-action='takedown']")?.addEventListener("click",async()=>{overflowMenu.hidden=true;await openStoryActionModal("takedown");});
+      overflowMenu.querySelector("[data-story-action='correction']")?.addEventListener("click",async()=>{overflowMenu.hidden=true;await openStoryActionModal("correction");});
+    }
 
     const shareStory=$("#share-story");
     if(shareStory)shareStory.onclick=()=>shareContent({
