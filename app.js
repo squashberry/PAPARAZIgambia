@@ -530,10 +530,9 @@
       const tag=String(filters.tag||"").replace(/^#/,"").trim();
       const search=String(filters.search||"").trim();
       if(search && search.startsWith("#")) return supabase.getArticles({status:"published",limit,offset,tag:search});
-      const result=await withTimeout(supabase.getArticles({status:"published",limit,offset,tag}),5000,{data:[],error:{message:"timeout"}});
-      let data=result?.data||[];
       const category=String(filters.category||"").trim();
-      if(category && category.toLowerCase()!=="all")data=data.filter(x=>String(x.category||"").toLowerCase()===category.toLowerCase());
+      const result=await withTimeout(supabase.getArticles({status:"published",limit,offset,tag,category}),5000,{data:[],error:{message:"timeout"}});
+      let data=result?.data||[];
       if(search){
         const q=search.toLowerCase();
         data=data.filter(x=>[x.title,x.excerpt,x.body,x.category,x.paparazi_profiles?.display_name,...(Array.isArray(x.hashtags)?x.hashtags:[])].some(v=>String(v||"").toLowerCase().includes(q)));
@@ -596,6 +595,7 @@
       +"<div class='latest-thumb"+variant+"'>"+coverImage(story.cover_url,story.title)+"</div>"
       +"<div class='latest-info'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
       +"<h3>"+esc(story.title)+"</h3>"
+      +(Array.isArray(story.hashtags)&&story.hashtags.length?"<div class='story-tags'>"+story.hashtags.slice(0,4).map(t=>"<span>"+esc(t.startsWith("#")?t:"#"+t)+"</span>").join("")+"</div>":"")
       +"<p>"+esc(story.excerpt||(story.body||"").slice(0,170))+"</p>"
       +"<div class='meta latest-meta' style='margin-top:10px'><span class='author-link'><strong>"+esc(author)+"</strong></span><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
       +"<div class='latest-side'><div class='category'>"+esc(story.category||"Story")+"</div><span class='read'>READ →</span></div></a>";
@@ -862,6 +862,7 @@
     root.innerHTML="<div class='container story-reader'>"
       +"<div class='story-reader-head'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
       +"<h1>"+esc(story.title)+"</h1><p class='story-dek'>"+esc(story.excerpt||"")+"</p>"
+      +(Array.isArray(story.hashtags)&&story.hashtags.length?"<div class='story-tags story-tags-large'>"+story.hashtags.map(t=>"<a href='newsroom.html?q="+encodeURIComponent(t.startsWith("#")?t:"#"+t)+"'>"+esc(t.startsWith("#")?t:"#"+t)+"</a>").join("")+"</div>":"")
       +"<div class='meta' style='margin-top:18px'><a class='author-link' href='"+authorHref(author.username)+"'><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")
       +"</strong></a><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div>"
       +"<div class='story-cover'>"+image+"<div class='cover-inner'><div class='cover-words'>"+esc(story.title)
