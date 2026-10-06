@@ -452,7 +452,7 @@
     title:"Welcome to PAPARAZZI🇬🇲",
     category:"Inside PAPARAZZI",
     excerpt:"A new home for the people, places, parties and moments that make The Gambia impossible to ignore.",
-    body:"The brief was simple: make a place that feels like The Gambia, not a recycled media template with a flag pasted on top.\n\nPAPARAZZI is built around the moments people actually talk about — the entrance nobody expected, the outfit everybody noticed, the street corner where a story starts, the event that had everybody outside.\n\nThe newsroom will mix staff-written stories with contributions from the community. Anyone can send a tip. Registered readers can become PAPARAZZI contributors and publish their own stories.\n\nThe rule is equally simple: be interesting, be accurate, and don't publish somebody else's private life just because you can.\n\nThis is the first page. The rest will be written with you.",
+    body:"The brief was simple: make a place that feels like The Gambia, not a recycled media template with a flag pasted on top.\n\nPAPARAZZI is built around the moments people actually talk about — the entrance nobody expected, the outfit everybody noticed, the street corner where a story starts, the event that had everybody outside.\n\nThe newsroom will mix staff-written stories with contributions from the community. Anyone can tell Paparazzi. Registered readers can become PAPARAZZI contributors and publish their own stories.\n\nThe rule is equally simple: be interesting, be accurate, and don't publish somebody else's private life just because you can.\n\nThis is the first page. The rest will be written with you.",
     author:{display_name:"PAPARAZZI🇬🇲",username:"paparazzigambia"},
     cover_url:"https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=85"
   };
@@ -780,7 +780,7 @@
     };
 
     $("#ticker-track").textContent=usingStarter
-      ?"The newsroom is open — send a tip, become a contributor or read the first page."
+      ?"The newsroom is open — tell Paparazzi, become a contributor or read the first page."
       :stories.slice(0,4).map(x=>x.title).join("  •  ");
 
     $("#latest-subtitle").textContent=usingStarter
@@ -855,7 +855,7 @@
       +" · PAPARAZZI newsroom</div></div></a>"
       +"<div class='story-next'><button id='share-story' class='btn btn-dark' type='button'>Share story →</button>"
       +"<a class='btn btn-ghost' href='index.html#latest'>← Back to latest</a>"
-      +"<a class='btn btn-ghost' href='submit.html'>Send a tip →</a></div></div>";
+      +"<a class='btn btn-ghost' href='submit.html'>Tell Paparazzi →</a></div></div>";
 
     const shareStory=$("#share-story");
     if(shareStory)shareStory.onclick=()=>shareContent({
