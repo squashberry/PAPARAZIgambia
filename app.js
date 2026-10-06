@@ -583,9 +583,9 @@
     const author=story.paparazi_profiles?.display_name||story.author?.display_name||"PAPARAZZI🇬🇲";
     return "<a class='rail-item' data-morph href='"+storyHref(story)+"'>"
       +"<div class='rail-thumb'>"+coverImage(story.cover_url,story.title)+"</div>"
-      +"<div><div class='kicker'>"+esc(story.category||"Story")+"</div>"
+      +"<div class='rail-copy'><div class='kicker'>"+esc(story.category||"Story")+"</div>"
       +"<h3>"+esc(story.title)+"</h3>"
-      +"<div class='meta'><a class='author-link' href='"+authorHref(story.paparazi_profiles?.username||story.author?.username)+"'>"+esc(author)+"</a><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div></a>";
+      +"<div class='meta'><span class='author-link'>"+esc(author)+"</span><span>•</span><span>"+fmtDate(story.published_at||story.created_at)+"</span></div></div></a>";
   }
 
   function latestItem(story,index){
