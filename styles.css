@@ -782,3 +782,9 @@ body.menu-open{touch-action:none}
 /* Sticky newsroom search fix */
 .newsroom-search-shell{position:sticky!important;top:var(--pz-header-height,70px)!important;z-index:900!important}
 .newsroom-search-shell .container{position:relative}
+
+
+/* Hide the long homepage hero description on mobile */
+@media(max-width:720px){
+  .hero-home .hero-copy{display:none!important}
+}
