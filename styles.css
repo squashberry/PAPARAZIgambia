@@ -649,3 +649,36 @@ body.menu-open{touch-action:none}
   .reader-following-list{grid-template-columns:1fr}
   .reader-next-step{align-items:flex-start;flex-direction:column}
 }
+
+
+/* Global button sizing hardening v36
+   Keep action controls visually consistent even when labels are long. */
+.btn{
+  min-height:44px;
+  line-height:1.1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  flex:0 1 auto;
+  max-width:100%;
+  padding:11px 16px;
+  border-radius:14px;
+}
+.btn.btn-dark,.btn.btn-ghost,.btn.btn-red{min-width:0}
+.nav a,.nav button{
+  line-height:1.1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.form-actions .btn,.author-actions .btn,.reader-actions .btn,.profile-hero-actions .btn,.profile-actions .btn{
+  min-width:120px;
+}
+@media(max-width:720px){
+  .btn{min-height:44px;padding:11px 14px}
+  .author-actions .btn,.reader-actions .btn,.profile-hero-actions .btn,.profile-actions .btn,
+  .latest-head .btn,.tip-banner-inner .btn,.reader-note .btn,.author-section .section-head>.btn{
+    width:100%;
+    max-width:100%;
+  }
+}
