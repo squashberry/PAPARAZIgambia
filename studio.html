@@ -54,5 +54,12 @@ document.addEventListener("DOMContentLoaded",async()=>{
  $("#connect-telegram").onclick=async()=>{const btn=$("#connect-telegram"),box=$("#telegram-connect-status");btn.disabled=true;try{const r=await api.getTelegramConnectCode();if(r.error)throw new Error(r.error.message);box.innerHTML="<strong>Open Telegram to connect.</strong><br><a class='btn btn-dark' target='_blank' rel='noopener noreferrer' href='"+r.data.deep_link+"'>Connect @PaparazziGambiaBot →</a><div class='helper' style='margin-top:8px'>This one-time link expires shortly.</div>";box.className="status-box show ok";}catch(err){box.textContent=err.message;box.className="status-box show error";}finally{btn.disabled=false;}};
  $("#key-form").onsubmit=async e=>{e.preventDefault();const r=await api.createApiKey($("#key-name").value.trim()||"Telegram bot",["stories:write","stories:read"]);if(r.error){alert(r.error.message);return;}$("#key-secret").hidden=false;$("#key-secret").innerHTML="<strong>Copy this now — it will not be shown again.</strong><code>"+esc(r.data.key)+"</code>";$("#key-name").value="";loadKeys();};
  $("#sign-out").onclick=async()=>{await api.auth.signOut();location.href="join.html";};
+  const telegramDraftId=new URLSearchParams(location.search).get("telegram_draft");
+  if(telegramDraftId){
+    const draftResult=await api.getArticles({authorId:session.user.id,status:"draft"});
+    const telegramDraft=(draftResult.data||[]).find(a=>String(a.id)===String(telegramDraftId));
+    if(telegramDraft){editStory(telegramDraft);const status=$("#story-status");if(status){status.textContent="Telegram draft loaded. Continue editing, then save or publish.";status.className="status-box show ok";}}
+  }
+
 });
 </script></body></html>
