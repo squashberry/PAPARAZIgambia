@@ -749,3 +749,26 @@ body.menu-open{touch-action:none}
   .hero-rail{border-radius:30px;padding:24px}
 }
 @media(max-width:720px){.pz-autocomplete{top:calc(100% + 5px);border-radius:13px}.pz-suggestion{padding:10px}.pz-suggestion small{font-size:.58rem}.home-search-row input{height:48px!important}}
+
+
+/* Story overflow actions */
+.story-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.story-overflow-wrap{position:relative;flex:0 0 auto}
+.story-overflow{width:44px;height:44px;border:1px solid var(--line);background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.06)}
+.story-overflow span{width:4px;height:4px;border-radius:50%;background:#111;display:block}
+.story-overflow:hover{background:#f3f1ed;transform:translateY(-1px)}
+.story-overflow-menu{position:absolute;right:0;top:52px;width:220px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:7px;box-shadow:0 18px 45px rgba(0,0,0,.16);z-index:80}
+.story-overflow-menu[hidden]{display:none}
+.story-overflow-menu button,.story-overflow-menu a{width:100%;display:flex;align-items:center;min-height:42px;border:0;border-radius:10px;background:transparent;color:var(--ink);padding:10px 12px;text-decoration:none;font:inherit;font-size:.82rem;font-weight:750;text-align:left;cursor:pointer}
+.story-overflow-menu button:hover,.story-overflow-menu a:hover{background:#f1eee8}
+.story-overflow-menu button:last-child{color:#9b1c1c}
+.story-action-card{width:min(520px,calc(100vw - 28px))}
+.story-action-card h2{margin-bottom:8px}
+.story-action-card textarea{width:100%;resize:vertical;border:1px solid var(--line);border-radius:13px;padding:12px 13px;background:#fff;color:var(--ink);font:inherit;line-height:1.5;outline:none}
+.story-action-card textarea:focus{border-color:#111;box-shadow:0 0 0 3px rgba(0,0,0,.07)}
+.story-action-card .field-label{display:block;margin:16px 0 7px;font-size:.68rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.story-action-card .form-status{min-height:20px;margin-top:10px;font-size:.78rem}
+.story-action-card .form-status.error{color:#a11}
+.story-action-card .form-status.success{color:#176b3a}
+.newsroom-search-row{position:relative}
+@media(max-width:640px){.story-head-row{gap:10px}.story-overflow{width:40px;height:40px}.story-overflow-menu{right:-4px;width:min(230px,calc(100vw - 34px))}}
