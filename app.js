@@ -985,7 +985,7 @@
         submit.disabled=true;submit.textContent="Sending…";
         const payload={category:isTakedown?"Story takedown request":"Story correction request",title:story.title,story:reason,location:storyUrl,submitter_user_id:session.user?.id||null,submitter_name:session.user?.email||"PAPARAZZI account",submitter_email:session.user?.email||null,is_anonymous:false,article_id:story.id||null,request_type:isTakedown?"takedown":"correction"};
         try{
-          const result=await apiCall("/api/submissions",{method:"POST",body:JSON.stringify(payload),write:true});
+          const result=await supabase.from("paparazi_submissions").insert(payload);
           if(result?.error)throw new Error(result.error.message||"We couldn't send the request.");
           if(status){status.textContent="Sent. Other PAPARAZZI contributors can now review it, and the story owner will be notified.";status.className="form-status success";}
           submit.textContent="Sent ✓"; setTimeout(close,1200);
