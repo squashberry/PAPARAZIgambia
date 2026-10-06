@@ -1182,7 +1182,6 @@
       };
 
       if(telegramButton)telegramButton.addEventListener("click",continueWithTelegram);
-      continueWithTelegram();
       return;
     }
     const tabs=$$(".switcher button");
