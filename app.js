@@ -1113,7 +1113,47 @@
     const existingSession=await currentSession();
     let rememberedSignedIn=false;
     try{rememberedSignedIn=localStorage.getItem("paparazzi_signed_in")==="1";}catch(_){}
+    const telegramInitData=String(window.PAPARAZZI_TELEGRAM?.initData||"").trim();
+    const openedFromTelegram=!!telegramInitData;
+
+    const showTelegramConnect=async(session)=>{
+      const forms=$("#auth-forms");
+      const connect=$("#telegram-connect-panel");
+      if(!connect)return;
+      if(forms)forms.hidden=true;
+      connect.hidden=false;
+      const name=String(session?.user?.email||"").split("@")[0]||"your account";
+      const nameEl=$("#telegram-connect-name");
+      if(nameEl)nameEl.textContent=name;
+      const status=$("#telegram-connect-status");
+      const button=$("#telegram-connect-button");
+      if(!status||!button)return;
+      status.textContent="Preparing your secure Telegram connection…";
+      status.className="status-box show";
+      button.disabled=true;
+      try{
+        const result=await supabase.auth.getTelegramConnectCode();
+        if(result?.error)throw new Error(result.error.message||"Unable to prepare the Telegram connection.");
+        const deepLink=result?.data?.deep_link||result?.data?.deepLink;
+        if(!deepLink)throw new Error("The Telegram connection link was not returned.");
+        button.href=deepLink;
+        button.hidden=false;
+        status.textContent="Your PAPARAZZI account is ready. Open the bot to connect it to this Telegram chat.";
+        status.className="status-box show ok";
+      }catch(error){
+        button.hidden=true;
+        status.textContent=error?.message||"Unable to prepare the Telegram connection. Please try again.";
+        status.className="status-box show error";
+      }finally{
+        button.disabled=false;
+      }
+    };
+
     if(existingSession){
+      if(openedFromTelegram){
+        await showTelegramConnect(existingSession);
+        return;
+      }
       const existingProfile=await ensureProfile(existingSession.user);
       const target=existingProfile?.username
         ? "author.html?u="+encodeURIComponent(existingProfile.username)
@@ -1266,7 +1306,13 @@
         return;
       }
       verificationMessage("Verified.","success");
-      completeVerification();
+      if(openedFromTelegram){
+        const verifiedSession=await currentSession();
+        if(verifiedSession)await showTelegramConnect(verifiedSession);
+        else completeVerification();
+      }else{
+        completeVerification();
+      }
     });
 
     const resend=$("#resend-code");
@@ -1332,7 +1378,11 @@
       if(forms)forms.classList.add("auth-success");
       const submitButton=signIn.querySelector("button[type='submit']");
       if(submitButton)submitButton.textContent="SIGNED IN ✓";
-      setTimeout(()=>location.replace(authNext||(signedProfile?.is_paparazzi?"studio.html":"index.html?welcome=1")),900);
+      if(openedFromTelegram){
+        await showTelegramConnect(result.data?.session||result.data);
+      }else{
+        setTimeout(()=>location.replace(authNext||(signedProfile?.is_paparazzi?"studio.html":"index.html?welcome=1")),900);
+      }
     });
 
     const signupStep1=$("#signup-step-1"),signupStep2=$("#signup-step-2"),signupContinue=$("#signup-continue"),signupBack=$("#signup-back");
