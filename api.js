@@ -202,6 +202,18 @@
         };
       },
 
+      async signInWithTelegram(){
+        const initData=String(window.PAPARAZZI_TELEGRAM?.initData||"").trim();
+        if(!initData)return {data:null,error:makeError("Open PAPARAZZI from Telegram to use Telegram sign-in.")};
+        const result=await request("/api/auth/telegram",{
+          method:"POST",
+          body:JSON.stringify({initData}),
+          write:true
+        });
+        if(!result.error)dispatchAuth();
+        return {data:result.data||null,error:result.error||null};
+      },
+
       async signUp(credentials){
         const result=await request("/api/auth/signup",{method:"POST",body:JSON.stringify({email:credentials.email,password:credentials.password,name:credentials.options?.data?.display_name||credentials.name||"",accepted_terms:!!credentials.accepted_terms,accepted_privacy:!!credentials.accepted_privacy,accepted_community_rules:!!credentials.accepted_community_rules}),write:true});
         return {data:result.data?.user?{user:result.data.user,session:null,verification_required:!!result.data.verification_required}:null,error:result.error||null};
