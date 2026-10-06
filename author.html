@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             "<div class='author-handle'>@"+esc(p.username||"")+
               (p.location?" · "+esc(p.location):"")+" · "+articles.length+" published "+
               (articles.length===1?"story":"stories")+"</div>"+
-            "<p>"+esc(p.bio||"Reporting, documenting and telling stories from The Gambia.")+"</p>"+
+            "<p>"+esc(p.bio||"Reporting, documenting and telling stories from The Gambia.")+"</p>"+((Array.isArray(p.celebrity_paparazzi)&&p.celebrity_paparazzi.length)? "<div class='helper' style='margin-top:12px;font-weight:700'>"+p.celebrity_paparazzi.map(x=>"Steady PAPARAZZI for <strong>"+esc(x.celebrity_name)+"</strong>").join(" · ")+"</div>":"")+
             (Array.isArray(p.beats)&&p.beats.length
               ? "<div class='pill-row'>"+p.beats.map(x=>"<span class='pill'>"+esc(x)+"</span>").join("")+"</div>":"")+
             (social.length
