@@ -788,3 +788,4 @@ body.menu-open{touch-action:none}
 @media(max-width:720px){
   .hero-home .hero-copy{display:none!important}
 }
+\n/* Telegram Mini App connection screen */\n.telegram-connect-mode .auth-aside{display:none}\n.telegram-connect-mode .auth-layout{grid-template-columns:minmax(0,560px);justify-content:center}\n.telegram-connect-mode .auth-card{max-width:560px}\n.telegram-connected-state .auth-layout{display:none}\n.telegram-connected-state #telegram-connect-panel{max-width:560px;margin:0 auto}\n
