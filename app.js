@@ -952,6 +952,61 @@
     const authNext=(requestedNext&&/^[a-z0-9._/-]+(?:\?[a-z0-9_=&%.-]+)?$/i.test(requestedNext)&&!requestedNext.includes("//"))?requestedNext:null;
     const signIn=$("#sign-in-form"),signUp=$("#sign-up-form"),verifyPanel=$("#verification-panel");
     if(!signIn||!signUp)return;
+
+    const telegramAuth=$("#telegram-auth");
+    const telegramButton=$("#telegram-auth-button");
+    const telegramStatus=$("#telegram-auth-status");
+    const telegramMode=!!window.PAPARAZZI_TELEGRAM?.enabled && !!window.PAPARAZZI_TELEGRAM?.initData;
+
+    if(telegramMode && telegramAuth){
+      const switcher=$(".switcher");
+      const progress=$(".signup-progress");
+      if(switcher)switcher.hidden=true;
+      if(progress)progress.hidden=true;
+      signIn.hidden=true;
+      signUp.hidden=true;
+      if(verifyPanel)verifyPanel.hidden=true;
+      telegramAuth.hidden=false;
+
+      const setTelegramStatus=(message,kind="")=>{
+        if(!telegramStatus)return;
+        telegramStatus.textContent=message||"";
+        telegramStatus.className="auth-feedback "+kind;
+        telegramStatus.hidden=!message;
+      };
+
+      const continueWithTelegram=async()=>{
+        if(telegramButton)telegramButton.disabled=true;
+        setTelegramStatus("Verifying your Telegram identity securely…","loading");
+        try{
+          const result=await withTimeout(
+            supabase.auth.signInWithTelegram(),
+            12000,
+            {error:{message:"Telegram sign-in took too long. Please try again."}}
+          );
+          if(result?.error){
+            setTelegramStatus(result.error.message||"Telegram sign-in failed.","error");
+            if(telegramButton)telegramButton.disabled=false;
+            return;
+          }
+
+          const signedProfile=await ensureProfile(result.data?.user);
+          try{localStorage.setItem("paparazzi_signed_in","1");}catch(_){}
+          const created=!!(result.data?.created||result.data?.created_account||result.data?.is_new);
+          const display=String(signedProfile?.display_name||window.PAPARAZZI_TELEGRAM?.user?.first_name||"there").trim();
+          setTelegramStatus((created?"ACCOUNT CREATED — ":"SIGNED IN — ")+"Welcome, "+display+".","success");
+          if(telegramButton)telegramButton.textContent="SIGNED IN ✓";
+          setTimeout(()=>location.replace(authNext||(signedProfile?.is_paparazzi?"studio.html":"index.html?welcome=1")),700);
+        }catch(error){
+          setTelegramStatus(error?.message||"Telegram sign-in failed.","error");
+          if(telegramButton)telegramButton.disabled=false;
+        }
+      };
+
+      if(telegramButton)telegramButton.addEventListener("click",continueWithTelegram);
+      continueWithTelegram();
+      return;
+    }
     const tabs=$$(".switcher button");
     const forms=$("#auth-forms");
     let verificationEmail="";
