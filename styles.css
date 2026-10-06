@@ -512,3 +512,80 @@ body.menu-open{touch-action:none}
   .latest-info p{font-size:.68rem!important}
   .latest-meta{font-size:.58rem!important}
 }
+
+/* PAPARAZZI profile system v33 */
+.author-page{padding:68px 0 92px}
+.author-loading{min-height:240px;display:grid;place-items:center}
+.author-profile-hero{display:grid;grid-template-columns:minmax(260px,.42fr) minmax(0,1fr);gap:54px;align-items:center;padding:48px 0 54px;border-bottom:1px solid var(--line)}
+.author-profile-hero.is-reader{background:linear-gradient(180deg,rgba(255,255,255,.28),transparent);border:1px solid var(--line);border-radius:30px;padding:48px;margin-bottom:28px}
+.author-avatar-wrap{position:relative;width:220px;height:220px}
+.author-avatar{width:220px;height:220px;border-radius:34px;background:#111;overflow:hidden;box-shadow:var(--shadow);display:grid;place-items:center}
+.author-avatar-img{width:100%;height:100%;object-fit:cover}
+.author-avatar-fallback{width:100%;height:100%;display:grid;place-items:center;color:#fff;font-family:Georgia,serif;font-size:5.2rem;font-weight:900;letter-spacing:-.08em}
+.author-verified{position:absolute;right:-10px;bottom:18px;background:#fff;color:#111;border:1px solid #111;border-radius:999px;padding:8px 11px;font-size:.62rem;font-weight:950;letter-spacing:.1em;box-shadow:0 8px 20px rgba(0,0,0,.12)}
+.author-copy h1{font-family:Georgia,serif;font-size:clamp(3rem,7vw,6.8rem);line-height:.86;letter-spacing:-.065em;margin:12px 0 10px}
+.author-handle{font-size:.78rem;font-weight:800;color:var(--muted);letter-spacing:.02em}
+.author-copy>p{max-width:720px;color:#57524b;font-size:1.04rem;margin:20px 0 0}
+.author-copy .pill-row{margin-top:18px}
+.author-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.author-overview{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line);margin-bottom:10px}
+.author-overview>div{padding:24px 20px;border-right:1px solid var(--line)}
+.author-overview>div:last-child{border-right:0}
+.author-overview strong{display:block;font-family:Georgia,serif;font-size:2.3rem;line-height:1}
+.author-overview span{display:block;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.13em;font-weight:900;margin-top:8px}
+.reader-note{display:flex;justify-content:space-between;align-items:center;gap:30px;padding:30px 32px;border:1px solid var(--line);border-radius:24px;background:#111;color:#fff;margin:30px 0 54px}
+.reader-note h2{font-family:Georgia,serif;font-size:clamp(1.9rem,4vw,3.2rem);line-height:.92;letter-spacing:-.05em;margin:9px 0}
+.reader-note p{color:#bdbdbd;max-width:700px;margin:0}
+.author-section{padding:52px 0 10px}
+.author-section .section-head h2{font-size:clamp(2rem,4vw,3rem)}
+.author-section-count{font-size:.7rem;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.12em}
+.profile-story-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.profile-story{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;border:1px solid var(--line);border-radius:20px;padding:12px;background:rgba(255,255,255,.48);min-width:0;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.profile-story:hover{transform:translateY(-3px);background:#fff;box-shadow:0 18px 35px rgba(0,0,0,.08)}
+.profile-story-media{height:170px;border-radius:14px;overflow:hidden;background:#151515;position:relative}
+.profile-story-media img{width:100%;height:100%;object-fit:cover}
+.profile-story-media.media-failed{background:linear-gradient(135deg,#111,#3a3a3a)}
+.profile-story-beat{position:absolute;left:10px;top:10px;background:#111;color:#fff;border-radius:999px;padding:6px 8px;font-size:.57rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.profile-story-copy{padding:8px 6px 8px 0;min-width:0}
+.profile-story-meta{font-size:.62rem;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile-story h3{font-family:Georgia,serif;font-size:1.55rem;line-height:.96;letter-spacing:-.04em;margin:8px 0}
+.profile-story p{color:#6a645c;font-size:.8rem;line-height:1.45;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.profile-story-read{display:block;margin-top:15px;font-size:.63rem;font-weight:950;letter-spacing:.1em}
+.following-feed-section{border-top:1px solid var(--line);margin-top:35px}
+.following-feed-section .section-head p{margin-top:7px}
+.author-empty{margin:70px auto;max-width:680px}
+.author-empty .btn{margin-top:18px}
+@media(max-width:900px){
+ .author-profile-hero{grid-template-columns:180px minmax(0,1fr);gap:30px}
+ .author-avatar-wrap,.author-avatar{width:180px;height:180px}
+ .author-profile-hero.is-reader{padding:34px}
+ .profile-story-grid{grid-template-columns:1fr}
+}
+@media(max-width:720px){
+ .author-page{padding:34px 0 65px}
+ .author-profile-hero,.author-profile-hero.is-reader{display:block;padding:26px 0;border-radius:0;border-left:0;border-right:0}
+ .author-profile-hero.is-reader{background:transparent}
+ .author-avatar-wrap,.author-avatar{width:116px;height:116px;border-radius:24px}
+ .author-avatar-fallback{font-size:3rem}
+ .author-verified{right:-7px;bottom:7px;padding:6px 8px}
+ .author-copy h1{font-size:clamp(2.9rem,15vw,5rem);margin-top:25px}
+ .author-copy>p{font-size:.93rem}
+ .author-actions .btn{width:100%}
+ .author-overview{grid-template-columns:repeat(3,1fr)}
+ .author-overview>div{padding:17px 10px}
+ .author-overview strong{font-size:1.65rem}
+ .author-overview span{font-size:.54rem;letter-spacing:.08em}
+ .reader-note{display:block;padding:24px;margin:22px 0 20px}
+ .reader-note .btn{width:100%;margin-top:18px}
+ .author-section{padding-top:35px}
+ .author-section .section-head{display:block}
+ .author-section .section-head>.btn{margin-top:15px;width:100%}
+ .profile-story{grid-template-columns:96px minmax(0,1fr);gap:12px;padding:10px;border-radius:17px}
+ .profile-story-media{height:96px;border-radius:11px}
+ .profile-story h3{font-size:1.1rem;margin:5px 0}
+ .profile-story p{font-size:.7rem;-webkit-line-clamp:2}
+ .profile-story-read{font-size:.55rem;margin-top:8px}
+ .profile-story-beat{font-size:.48rem;padding:5px 6px}
+ .profile-story-copy{padding:2px 3px 2px 0}
+ .profile-story-meta{font-size:.55rem}
+}
