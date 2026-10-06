@@ -541,6 +541,76 @@
     }catch(error){return {data:[],error};}
   }
 
+  function setupSearchAutocomplete(input,getPool,onChoose){
+    if(!input)return;
+    const row=input.closest(".home-search-row,.newsroom-search-row")||input.parentElement;
+    if(!row)return;
+    let box=row.querySelector(".pz-autocomplete");
+    if(!box){
+      box=document.createElement("div");
+      box.className="pz-autocomplete";
+      box.setAttribute("role","listbox");
+      row.appendChild(box);
+    }
+    let active=-1;
+
+    const normalizeItem=(item,type="story")=>{
+      if(type==="category")return {type,label:item,value:item,meta:"Beat"};
+      if(type==="tag")return {type,label:"#"+String(item).replace(/^#/,""),value:"#"+String(item).replace(/^#/,""),meta:"Hashtag"};
+      return {type:"story",label:String(item.title||"Untitled story"),value:String(item.title||""),meta:String(item.category||"Story")};
+    };
+
+    const render=()=>{
+      const q=input.value.trim().toLowerCase();
+      const pool=Array.isArray(getPool?.())?getPool():[];
+      const categories=["People","Events","Nightlife","Style","Culture","Viral"];
+      const tags=[...new Set(pool.flatMap(x=>Array.isArray(x.hashtags)?x.hashtags:[]).map(x=>String(x).replace(/^#/,"")).filter(Boolean))].slice(0,8);
+      const candidates=[
+        ...pool.map(x=>normalizeItem(x)),
+        ...categories.map(x=>normalizeItem(x,"category")),
+        ...tags.map(x=>normalizeItem(x,"tag"))
+      ];
+      const seen=new Set();
+      const filtered=candidates.filter(item=>{
+        const key=(item.type+"|"+item.label).toLowerCase();
+        if(seen.has(key))return false;
+        seen.add(key);
+        return !q||key.includes(q)||item.meta.toLowerCase().includes(q);
+      }).slice(0,6);
+
+      if(!q||!filtered.length){box.innerHTML="";box.hidden=true;active=-1;return;}
+      box.innerHTML=filtered.map((item,i)=>
+        "<button type='button' class='pz-suggestion"+(i===0?" is-active":"")+"' role='option' data-index='"+i+"' data-value='"+esc(item.value)+"' data-type='"+esc(item.type)+"'>"+
+        "<span class='pz-suggestion-main'>"+esc(item.label)+"</span><small>"+esc(item.meta)+"</small></button>"
+      ).join("");
+      box.hidden=false;
+      active=0;
+      box.querySelectorAll(".pz-suggestion").forEach(btn=>btn.addEventListener("click",()=>{
+        input.value=btn.dataset.value||"";
+        box.hidden=true;
+        active=-1;
+        onChoose?.(btn.dataset.value||"",btn.dataset.type||"story");
+      }));
+    };
+
+    input.addEventListener("input",render);
+    input.addEventListener("focus",()=>{if(input.value.trim())render();});
+    input.addEventListener("keydown",event=>{
+      if(box.hidden)return;
+      const buttons=[...box.querySelectorAll(".pz-suggestion")];
+      if(!buttons.length)return;
+      if(event.key==="ArrowDown"){event.preventDefault();active=(active+1)%buttons.length;}
+      else if(event.key==="ArrowUp"){event.preventDefault();active=(active-1+buttons.length)%buttons.length;}
+      else if(event.key==="Enter"&&active>=0){event.preventDefault();buttons[active].click();return;}
+      else if(event.key==="Escape"){box.hidden=true;active=-1;return;}
+      else return;
+      buttons.forEach((btn,i)=>btn.classList.toggle("is-active",i===active));
+    });
+    document.addEventListener("click",event=>{
+      if(!row.contains(event.target)){box.hidden=true;active=-1;}
+    });
+  }
+
   function coverImage(url,alt="",loading="lazy"){
     return url
       ? "<span class='pz-media' data-pz-watermark><img loading='"+loading+"' referrerpolicy='no-referrer' alt='"+esc(alt)+"' src='"+esc(url)+"' onerror=\"this.style.display='none';this.parentElement.classList.add('media-failed')\"><span class='pz-watermark' aria-hidden='true'>PAPARAZZI</span></span>"
@@ -653,6 +723,7 @@
     const grid=$("#newsroom-grid"),sentinel=$("#newsroom-sentinel"),search=$("#newsroom-search");
     const categorySelect=$("#newsroom-category"),hashtagRail=$("#newsroom-hashtags"),count=$("#newsroom-count"),status=$("#newsroom-status"),moreStatus=$("#newsroom-more-status");
     let offset=0,loading=false,done=false,requestToken=0,searchTimer=null;
+    let suggestionPool=[];
     const initialParams=new URLSearchParams(location.search);
     if(search && (initialParams.get("tag")||initialParams.get("q"))) search.value=initialParams.get("tag")?("#"+initialParams.get("tag").replace(/^#/,"")):(initialParams.get("q")||"");
 
@@ -693,6 +764,7 @@
       const result=await fetchStories(12,offset,state());
       if(token!==requestToken)return;
       const stories=(result.data||[]).map(normalize);
+      suggestionPool=[...new Map([...suggestionPool,...stories].map(x=>[x.id||x.slug||x.title,x])).values()].slice(-60);
       if(reset)renderHashtags(stories);
       else if(stories.length)renderHashtags(stories);
       grid.insertAdjacentHTML("beforeend",stories.map((story,i)=>latestItem(story,offset+i)).join(""));
@@ -709,6 +781,15 @@
       clearTimeout(searchTimer);
       searchTimer=setTimeout(()=>loadMore(true),220);
     };
+    setupSearchAutocomplete(search,()=>suggestionPool,(value,type)=>{
+      if(type==="category"){
+        if(categorySelect)categorySelect.value=value;
+        loadMore(true);
+        return;
+      }
+      search.value=value;
+      loadMore(true);
+    });
     search?.addEventListener("input",resetAndLoad);
     categorySelect?.addEventListener("change",()=>loadMore(true));
 
@@ -783,6 +864,10 @@
     };
     renderHomeLatest(latestStories,false);
     const search=$("#home-search");
+    setupSearchAutocomplete(search,()=>latestStories,(value,type)=>{
+      if(type==="category"){ search.value=value; }
+      const event=new Event("input",{bubbles:true}); search.dispatchEvent(event);
+    });
     if(search){
       search.addEventListener("input",()=>{
         const q=search.value.trim().toLowerCase();
