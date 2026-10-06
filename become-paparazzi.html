@@ -28,7 +28,7 @@
 document.addEventListener("DOMContentLoaded",async()=>{
  const $=s=>document.querySelector(s),api=window.PAPARAZZI_API,gate=$("#become-gate"),form=$("#become-form");
  const session=(await api.auth.getSession()).data.session;
- if(!session){gate.innerHTML="<h3>Your account comes first.</h3><p>Sign in or create your PAPARAZZI account. Once you're verified, we'll bring you straight back here to finish your public contributor profile.</p><a class='btn btn-dark' href='join.html?next=become-paparazzi.html'>Sign in / create account →</a>";return;}
+ if(!session){const celebrity=new URLSearchParams(location.search).get("celebrity")||"";const next="become-paparazzi.html"+(celebrity?"?celebrity="+encodeURIComponent(celebrity):"");gate.innerHTML="<h3>Your account comes first.</h3><p>Sign in or create your PAPARAZZI account. Once verified, we will bring you straight back here to finish your public contributor profile.</p><a class='btn btn-dark' href='join.html?next="+encodeURIComponent(next)+"'>Sign in / create account →</a>";return;}
  const p=(await api.getMyProfile()).data||{};
  if(p.is_paparazzi){gate.innerHTML="<h3>You're already a PAPARAZZI.</h3><p>Your contributor desk is ready.</p><a class='btn btn-dark' href='studio.html'>Open Studio →</a>";return;}
  gate.hidden=true;form.hidden=false;
