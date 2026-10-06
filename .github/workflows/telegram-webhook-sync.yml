@@ -1,8 +1,6 @@
 name: Sync PAPARAZZI Telegram webhook
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -23,7 +21,6 @@ jobs:
           webhook_url="$(echo "$body" | jq -r '.webhook_info.url // empty')"
           test -n "$webhook_url"
           [[ "$webhook_url" == */api/telegram/webhook/* ]]
-
           probe="$(curl --fail --silent --show-error --max-time 30 \
             -X POST -H "Content-Type: application/json" \
             --data "{\"update_id\":${GITHUB_RUN_ID},\"message\":{\"message_id\":1,\"from\":{\"id\":0,\"is_bot\":false,\"first_name\":\"PAPARAZZI Health Check\"},\"chat\":{\"id\":0,\"type\":\"private\"},\"date\":${GITHUB_RUN_ATTEMPT},\"text\":\"/start\"}}" \
