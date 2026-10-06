@@ -772,3 +772,8 @@ body.menu-open{touch-action:none}
 .story-action-card .form-status.success{color:#176b3a}
 .newsroom-search-row{position:relative}
 @media(max-width:640px){.story-head-row{gap:10px}.story-overflow{width:40px;height:40px}.story-overflow-menu{right:-4px;width:min(230px,calc(100vw - 34px))}}
+
+
+/* Keep the newsroom search locked beneath the fixed header while scrolling */
+.newsroom-search-shell{position:sticky!important;top:var(--pz-header-height,70px)!important;z-index:900!important}
+.newsroom-search-shell .container{position:relative}
