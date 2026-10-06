@@ -32,3 +32,15 @@ jobs:
           fi
 
           echo "Telegram webhook reconciled: $webhook_url"
+
+          # Exercise the exact webhook URL Telegram uses.
+          # The synthetic chat id is intentionally invalid; the Worker must still
+          # acknowledge the update with HTTP 200 rather than returning 500.
+          probe="$(curl --fail --silent --show-error --max-time 30 \
+            -X POST \
+            -H "Content-Type: application/json" \
+            --data "{\"update_id\":${GITHUB_RUN_ID},\"message\":{\"message_id\":1,\"from\":{\"id\":0,\"is_bot\":false,\"first_name\":\"PAPARAZZI Health Check\"},\"chat\":{\"id\":0,\"type\":\"private\"},\"date\":${GITHUB_RUN_ATTEMPT},\"text\":\"/start\"}}" \
+            "$webhook_url")"
+
+          echo "Webhook transport probe response: $probe"
+          echo "Telegram webhook transport probe: HTTP 200"
