@@ -834,7 +834,10 @@
 
     const result=await fetchStories(50);
     const usingStarter=!result.data.length;
-    const stories=(result.data.length?result.data:starterStories).map((item,index)=>({
+    const liveStories=result.data||[];
+    const liveKeys=new Set(liveStories.map(item=>String(item.slug||item.id||item.title||"")));
+    const storiesSource=usingStarter?starterStories:[...liveStories,...starterStories.filter(item=>!liveKeys.has(String(item.slug||item.id||item.title||"")))];
+    const stories=storiesSource.map((item,index)=>({
       ...item,
       _starter:usingStarter,
       published_at:item.published_at||new Date(Date.now()-(index*86400000)).toISOString(),
