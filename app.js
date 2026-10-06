@@ -837,7 +837,7 @@
     }
 
     const author=story.paparazi_profiles||story.author||{};
-    const body=String(story.body||"").split(/\n\s*\n/).map(p=>"<p>"+esc(p).replace(/\n/g,"<br>")+"</p>").join("");
+    const body=String(story.body||"").split(/\n\s*\n/).map(p=>{const raw=p.trim();const im=raw.match(/^\[\[IMAGE\s+(\d+)\]\]$/i);if(im){const idx=Math.max(1,Number(im[1]))-1,url=storyMediaUrls(story)[idx];return url?"<figure class="story-inline-image"><img loading="lazy" referrerpolicy="no-referrer" src=""+esc(url)+"" alt=""+esc(story.title+" — image "+(idx+1))+""><figcaption>PHOTO "+String(idx+1).padStart(2,"0")+"</figcaption></figure>":"";}let h=esc(raw).replace(/\n/g,"<br>");h=h.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,"<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>").replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\*([^*]+)\*/g,"<em>$1</em>");if(h.startsWith("&gt; "))return "<blockquote>"+h.slice(6)+"</blockquote>";return "<p>"+h+"</p>";}).join("");
     const mediaUrls=storyMediaUrls(story);
     const primaryImage=mediaUrls[0]||null;
     const image=primaryImage?coverImage(primaryImage,story.title,"eager"):"";
