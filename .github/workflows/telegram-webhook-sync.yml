@@ -9,9 +9,26 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Sync Telegram webhook
+      - name: Reconcile Telegram webhook
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --max-time 30             "https://paparazzi-api.squashberrypay.workers.dev/api/telegram/setup"
-          echo
+
+          response="$(curl --fail --silent --show-error --max-time 30 \
+            "https://paparazzi-api.squashberrypay.workers.dev/api/telegram/setup?source=github-${GITHUB_RUN_ID}")"
+
+          echo "$response" | jq .
+
+          webhook_url="$(echo "$response" | jq -r '.webhook_info.url // empty')"
+          webhook_ok="$(echo "$response" | jq -r '.ok // false')"
+          last_error="$(echo "$response" | jq -r '.webhook_info.last_error_message // empty')"
+
+          test "$webhook_ok" = "true"
+          test -n "$webhook_url"
+          [[ "$webhook_url" == */api/telegram/webhook/* ]]
+
+          if [[ -n "$last_error" ]]; then
+            echo "::warning::Telegram reports: $last_error"
+          fi
+
+          echo "Telegram webhook reconciled: $webhook_url"
