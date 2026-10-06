@@ -601,6 +601,43 @@
       +"<div class='latest-side'><div class='category'>"+esc(story.category||"Story")+"</div><span class='read'>READ →</span></div></a>";
   }
 
+  function initHomeSearchStickiness(){
+    const shell=$(".home-search-shell");
+    const search=$(".home-search-top");
+    const sentinel=$("#home-search-sentinel");
+    const header=$(".site-header");
+    if(!shell||!search||!sentinel)return;
+
+    let stuck=false;
+
+    const syncHeight=()=>{
+      if(!stuck)shell.style.height=search.offsetHeight+"px";
+    };
+
+    const setStuck=next=>{
+      if(stuck===next)return;
+      stuck=next;
+      shell.classList.toggle("is-stuck",stuck);
+      search.classList.toggle("is-stuck",stuck);
+      if(stuck){
+        shell.style.height=search.offsetHeight+"px";
+      }else{
+        shell.style.height="";
+        requestAnimationFrame(syncHeight);
+      }
+    };
+
+    const check=()=>{
+      const headerHeight=header?.getBoundingClientRect().height||0;
+      setStuck(sentinel.getBoundingClientRect().top<=headerHeight);
+    };
+
+    syncHeight();
+    window.addEventListener("resize",syncHeight,{passive:true});
+    window.addEventListener("scroll",check,{passive:true});
+    requestAnimationFrame(check);
+  }
+
   async function initHome(){
     if(!$("#lead-title"))return;
     initHomeSearchStickiness();
