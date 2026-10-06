@@ -24,80 +24,185 @@
 
 <script src="config.js?v=33"></script><script src="api.js?v=33"></script><script src="app.js?v=33"></script>
 <script>
-document.addEventListener("DOMContentLoaded",async()=>{
- const root=document.querySelector("#author-root"),api=window.PAPARAZZI_API;
- const u=(new URLSearchParams(location.search).get("u")||"").trim();
- const esc=v=>String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
- const fmt=v=>{const d=new Date(v||"");return Number.isNaN(d.getTime())?"Recently":new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"short",year:"numeric"}).format(d);};
- const initials=v=>String(v||"PAPARAZZI").trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase()||"P";
- const image=(url,title,cls="")=>url?"<img class='"+cls+"' src='"+esc(url)+"' alt='"+esc(title||"")+"' loading='lazy' onerror=\"this.style.display='none';this.parentElement.classList.add('media-failed')\">":"";
- const storyCard=(a,compact=false)=>"<a class='profile-story "+(compact?"profile-story-compact":"")+"' href='story.html?slug="+encodeURIComponent(a.slug||"")+"'><div class='profile-story-media'>"+image(a.cover_url,a.title)+"<span class='profile-story-beat'>"+esc(a.category||"Story")+"</span></div><div class='profile-story-copy'><div class='profile-story-meta'>"+esc(a.paparazi_profiles?.display_name||"PAPARAZZI🇬🇲")+" · "+fmt(a.published_at||a.created_at)+"</div><h3>"+esc(a.title||"Untitled story")+"</h3><p>"+esc(a.excerpt||"")+"</p><span class='profile-story-read'>READ STORY →</span></div></a>";
+document.addEventListener("DOMContentLoaded", async () => {
+  const root = document.querySelector("#author-root");
+  const api = window.PAPARAZZI_API;
+  const params = new URLSearchParams(location.search);
+  const username = (params.get("u") || "").trim();
 
- if(!u){root.innerHTML="<div class='empty-state author-empty'><h3>No profile selected.</h3><p>Choose a PAPARAZZI profile from a story or community page.</p><a class='btn btn-dark' href='index.html'>Back to newsroom →</a></div>";return;}
+  const esc = value => String(value ?? "").replace(/[&<>"]/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"
+  }[c]));
+  const date = value => {
+    const d = new Date(value || "");
+    return Number.isNaN(d.getTime()) ? "Recently" :
+      new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"short",year:"numeric"}).format(d);
+  };
+  const initials = value => String(value || "PAPARAZZI").trim().split(/\s+/)
+    .filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "P";
+  const media = (url,title) => url
+    ? "<img src='"+esc(url)+"' alt='"+esc(title)+"' loading='lazy' onerror=\"this.style.display='none';this.parentElement.classList.add('media-failed')\">"
+    : "";
 
- const result=await api.getPublicProfile(u);
- if(result.error||!result.data){
-   root.innerHTML="<div class='empty-state author-empty'><h3>Profile not found.</h3><p>This account may not have a public PAPARAZZI profile.</p><a class='btn btn-dark' href='index.html'>Back to newsroom →</a></div>";
-   return;
- }
+  const storyCard = a => "<a class='profile-story' href='story.html?slug="+encodeURIComponent(a.slug||"")+"'>" +
+    "<div class='profile-story-media'>"+media(a.cover_url,a.title)+
+    "<span class='profile-story-beat'>"+esc(a.category||"Story")+"</span></div>" +
+    "<div class='profile-story-copy'><div class='profile-story-meta'>"+
+    esc(a.paparazi_profiles?.display_name||"PAPARAZZI🇬🇲")+" · "+date(a.published_at||a.created_at)+
+    "</div><h3>"+esc(a.title||"Untitled story")+"</h3><p>"+esc(a.excerpt||"")+
+    "</p><span class='profile-story-read'>READ STORY →</span></div></a>";
 
- const p=result.data.profile||result.data;
- const articles=Array.isArray(result.data.articles)?result.data.articles:[];
- const sessionResult=await api.auth.getSession();
- const session=sessionResult.data?.session||null;
- const followingResult=session?await api.getFollowing():{data:[]};
- const following=followingResult.data||[];
- const followingNames=new Set(following.map(x=>String(x.username||"").toLowerCase()).filter(Boolean));
- let followedStories=[];
- if(session&&followingNames.size){
-   const allResult=await api.getArticles({status:"published",limit:100});
-   const all=allResult.data||[];
-   followedStories=all.filter(a=>followingNames.has(String(a.paparazi_profiles?.username||a.author?.username||"").toLowerCase()) && String(a.paparazi_profiles?.username||a.author?.username||"").toLowerCase()!==String(p.username||"").toLowerCase()).slice(0,12);
- }
+  const empty = (title,body,href,label) =>
+    "<div class='empty-state'><h3>"+esc(title)+"</h3><p>"+esc(body)+"</p>"+
+    (href ? "<a class='btn btn-dark' href='"+href+"'>"+esc(label||"Continue →")+"</a>" : "")+
+    "</div>";
 
- const isAuthor=!!p.is_paparazzi;
- const social=[["Instagram",p.instagram],["Facebook",p.facebook],["TikTok",p.tiktok],["YouTube",p.youtube],["Website",p.website_url],["X",p.x_handle]].filter(x=>x[1]);
- const avatar=p.avatar_url?"<img src='"+esc(p.avatar_url)+"' alt='"+esc(p.display_name||"Profile")+"' class='author-avatar-img'>":"<div class='author-avatar-fallback'>"+initials(p.display_name)+"</div>";
- const displayName=p.display_name||p.username||"PAPARAZZI member";
- document.title=displayName+" — PAPARAZZI🇬🇲";
- const desc=document.querySelector('meta[name="description"]');if(desc)desc.content=isAuthor?(p.bio||"PAPARAZZI contributor")+" · "+articles.length+" published stories.":"PAPARAZZI community profile for "+displayName+".";
+  if (!username) {
+    root.innerHTML = empty("No profile selected.","Choose a PAPARAZZI profile from a story or community page.","index.html","Back to newsroom →");
+    return;
+  }
 
- const followButton=session&&!String(session.user?.id||"").length?"":"";
- const alreadyFollowing=following.some(x=>String(x.username||"").toLowerCase()===String(p.username||"").toLowerCase());
- const actionHtml=isAuthor
-   ? "<button id='follow-author' class='btn btn-dark'>"+(alreadyFollowing?"Following ✓":"Follow "+esc(displayName)+" →")+"</button><a class='btn btn-ghost' href='submit.html'>Send a tip</a>"
-   : "<a class='btn btn-dark' href='become-paparazzi.html'>Become a PAPARAZZI →</a><a class='btn btn-ghost' href='submit.html'>Send a tip</a>";
+  try {
+    const result = await api.getPublicProfile(username);
+    if (result.error || !result.data) {
+      root.innerHTML = empty("Profile not found.","This account may not have a PAPARAZZI profile.","index.html","Back to newsroom →");
+      return;
+    }
 
- const identityLine=isAuthor
-   ? "<div class='author-handle'>@"+esc(p.username||"")+(p.location?" · "+esc(p.location):"")+" · "+articles.length+" published "+(articles.length===1?"story":"stories")+"</div>"
-   : "<div class='author-handle'>@"+esc(p.username||"")+(p.location?" · "+esc(p.location):"")+" · PAPARAZZI community member</div>";
+    const p = result.data.profile || result.data;
+    const articles = Array.isArray(result.data.articles) ? result.data.articles : [];
+    const sessionResult = await api.auth.getSession();
+    const session = sessionResult.data?.session || null;
+    const followingResult = session ? await api.getFollowing() : {data:[]};
+    const following = Array.isArray(followingResult.data) ? followingResult.data : [];
+    const isContributor = !!p.is_paparazzi;
 
- root.innerHTML=
- "<section class='author-profile-hero "+(isAuthor?"is-contributor":"is-reader")+"'>"+
-   "<div class='author-avatar-wrap'>"+avatar+(isAuthor?"<span class='author-verified'>PZ</span>":"")+"</div>"+
-   "<div class='author-copy'>"+
-     "<div class='eyebrow'>"+(isAuthor?"PAPARAZZI CONTRIBUTOR":"PAPARAZZI COMMUNITY MEMBER")+"</div>"+
-     "<h1>"+esc(displayName)+"</h1>"+identityLine+
-     "<p>"+esc(p.bio||(isAuthor?"Reporting, documenting and telling stories from The Gambia.":"A PAPARAZZI member. Follow contributors and build your own newsroom feed."))+"</p>"+
-     (isAuthor&&Array.isArray(p.beats)&&p.beats.length?"<div class='pill-row'>"+p.beats.map(x=>"<span class='pill'>"+esc(x)+"</span>").join("")+"</div>":"")+
-     (social.length?"<div class='social-row'>"+social.map(x=>"<a href='"+esc(x[1])+"' target='_blank' rel='noopener noreferrer'>"+esc(x[0])+" ↗</a>").join("")+"</div>":"")+
-     "<div class='author-actions'>"+actionHtml+"</div>"+
-   "</div>"+
- "</section>"+
- (isAuthor
-   ? "<section class='author-overview'><div><strong>"+articles.length+"</strong><span>Published stories</span></div><div><strong>"+following.length+"</strong><span>Following</span></div><div><strong>"+(p.beats?.length||0)+"</strong><span>Beats</span></div></section>"
-   : "<section class='reader-note'><div><span class='eyebrow'>NOT A CONTRIBUTOR — YET</span><h2>This profile is for the person, not a made-up byline.</h2><p>"+esc(displayName)+" has an account on PAPARAZZI, but has not joined the contributor newsroom. There is no fake story archive or contributor badge here.</p></div><a class='btn btn-dark' href='become-paparazzi.html'>Become a PAPARAZZI →</a></section>")+
- (isAuthor
-   ? "<section class='author-section'><div class='section-head'><div><div class='eyebrow'>THE ARCHIVE</div><h2>Stories by "+esc(displayName)+"</h2></div><span class='author-section-count'>"+articles.length+" "+(articles.length===1?"story":"stories")+"</span></div><div class='profile-story-grid'>"+(articles.length?articles.map(a=>storyCard(a)).join(""):"<div class='empty-state'><h3>No published stories yet.</h3><p>This contributor profile is ready for their first published story.</p></div>")+"</div></section>"
-   : "")+
- <section class='author-section contributor-note'><div class='section-head'><div><div class='eyebrow'>COMMUNITY</div><h2>Follow PAPARAZZI contributors from their profiles.</h2><p>Your personal following feed belongs on your account profile.</p></div><a class='btn btn-ghost' href='profile.html'>Open my profile →</a></div></section>
+    document.title = (p.display_name || p.username || "Profile")+" — PAPARAZZI🇬🇲";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.content = isContributor
+      ? (p.bio || "PAPARAZZI contributor profile.")
+      : "PAPARAZZI reader profile and newsroom feed.";
 
- const follow=document.querySelector("#follow-author");
- if(follow){
-   if(!session){follow.onclick=()=>location.href="join.html";return;}
-   let isFollowing=alreadyFollowing;
-   follow.onclick=async()=>{follow.disabled=true;const r=isFollowing?await api.unfollow(p.username):await api.follow(p.username);if(!r.error){isFollowing=!isFollowing;follow.textContent=isFollowing?"Following ✓":"Follow "+displayName+" →";}else{follow.disabled=false;alert(r.error.message);}};
- }
+    if (isContributor) {
+      const avatar = p.avatar_url
+        ? "<img class='author-avatar-img' src='"+esc(p.avatar_url)+"' alt='"+esc(p.display_name||"Contributor")+"'>"
+        : "<div class='author-avatar-fallback'>"+initials(p.display_name)+"</div>";
+      const social = [["Instagram",p.instagram],["Facebook",p.facebook],["TikTok",p.tiktok],["YouTube",p.youtube],["Website",p.website_url],["X",p.x_handle]].filter(x=>x[1]);
+      const alreadyFollowing = following.some(x=>String(x.username||"").toLowerCase()===String(p.username||"").toLowerCase());
+
+      root.innerHTML =
+        "<section class='author-profile-hero is-contributor'>"+
+          "<div class='author-avatar-wrap'>"+avatar+"<span class='author-verified'>PZ</span></div>"+
+          "<div class='author-copy'>"+
+            "<div class='eyebrow'>PAPARAZZI CONTRIBUTOR</div>"+
+            "<h1>"+esc(p.display_name||p.username||"PAPARAZZI contributor")+"</h1>"+
+            "<div class='author-handle'>@"+esc(p.username||"")+
+              (p.location?" · "+esc(p.location):"")+" · "+articles.length+" published "+
+              (articles.length===1?"story":"stories")+"</div>"+
+            "<p>"+esc(p.bio||"Reporting, documenting and telling stories from The Gambia.")+"</p>"+
+            (Array.isArray(p.beats)&&p.beats.length
+              ? "<div class='pill-row'>"+p.beats.map(x=>"<span class='pill'>"+esc(x)+"</span>").join("")+"</div>":"")+
+            (social.length
+              ? "<div class='social-row'>"+social.map(x=>"<a href='"+esc(x[1])+"' target='_blank' rel='noopener noreferrer'>"+esc(x[0])+" ↗</a>").join("")+"</div>":"")+
+            "<div class='author-actions'><button id='follow-author' class='btn btn-dark'>"+
+              (alreadyFollowing?"Following ✓":"Follow "+esc(p.display_name||p.username)+" →")+
+            "</button><a class='btn btn-ghost' href='submit.html'>Send a tip</a></div>"+
+          "</div>"+
+        "</section>"+
+        "<section class='author-overview'><div><strong>"+articles.length+"</strong><span>Published stories</span></div>"+
+          "<div><strong>"+following.length+"</strong><span>Following</span></div>"+
+          "<div><strong>"+(p.beats?.length||0)+"</strong><span>Beats</span></div></section>"+
+        "<section class='author-section'><div class='section-head'><div><div class='eyebrow'>THE ARCHIVE</div>"+
+          "<h2>Stories by "+esc(p.display_name||p.username)+"</h2></div><span class='author-section-count'>"+
+          articles.length+" "+(articles.length===1?"story":"stories")+"</span></div>"+
+          "<div class='profile-story-grid'>"+
+          (articles.length ? articles.map(storyCard).join("") :
+            empty("No published stories yet.","This contributor profile is ready for their first published story."))+
+          "</div></section>";
+
+      const follow = document.querySelector("#follow-author");
+      if (follow) {
+        if (!session) {
+          follow.onclick = () => location.href = "join.html";
+        } else {
+          let active = alreadyFollowing;
+          follow.onclick = async () => {
+            follow.disabled = true;
+            const r = active ? await api.unfollow(p.username) : await api.follow(p.username);
+            if (!r.error) {
+              active = !active;
+              follow.textContent = active ? "Following ✓" : "Follow "+(p.display_name||p.username)+" →";
+            } else {
+              follow.disabled = false;
+              alert(r.error.message || "Unable to update following.");
+            }
+          };
+        }
+      }
+      return;
+    }
+
+    /* READER STATE — deliberately a completely different page from a contributor. */
+    const displayName = p.display_name || p.username || "PAPARAZZI reader";
+    const followingNames = new Set(following.map(x=>String(x.username||"").toLowerCase()).filter(Boolean));
+    const followedProfiles = following.slice(0,24);
+    let feed = [];
+    if (followingNames.size) {
+      const allResult = await api.getArticles({status:"published",limit:100});
+      const all = Array.isArray(allResult.data) ? allResult.data : [];
+      feed = all.filter(a => followingNames.has(
+        String(a.paparazi_profiles?.username || a.author?.username || "").toLowerCase()
+      )).slice(0,24);
+    }
+
+    const followingList = followedProfiles.length
+      ? "<div class='reader-following-list'>"+followedProfiles.map(f =>
+          "<a class='reader-following-person' href='author.html?u="+encodeURIComponent(f.username||"")+"'>"+
+          "<span class='reader-following-avatar'>"+initials(f.display_name||f.username)+"</span>"+
+          "<span><strong>"+esc(f.display_name||f.username)+"</strong><small>@"+esc(f.username||"")+"</small></span>"+
+          "</a>").join("")+"</div>"
+      : empty("You are not following anyone yet.","Follow a PAPARAZZI contributor and their new stories will appear here.","index.html","Browse the newsroom →");
+
+    const feedHtml = feed.length
+      ? "<div class='profile-story-grid'>"+feed.map(storyCard).join("")+"</div>"
+      : empty(
+          "Your feed is waiting.",
+          followingNames.size
+            ? "The people you follow have no published stories yet."
+            : "Follow contributors to build your personal PAPARAZZI newsroom feed.",
+          "index.html#latest","Explore latest stories →"
+        );
+
+    root.innerHTML =
+      "<section class='reader-account-hero'>"+
+        "<div class='reader-avatar'>"+(p.avatar_url
+          ? "<img src='"+esc(p.avatar_url)+"' alt='"+esc(displayName)+"'>"
+          : "<span>"+initials(displayName)+"</span>")+"</div>"+
+        "<div class='reader-account-copy'>"+
+          "<div class='eyebrow'>PAPARAZZI READER</div>"+
+          "<h1>"+esc(displayName)+"</h1>"+
+          "<div class='reader-handle'>@"+esc(p.username||"")+" · Community reader</div>"+
+          "<p>"+esc(p.bio||"You're a reader on PAPARAZZI. Follow contributors and build a personal feed of stories you care about.")+"</p>"+
+          "<div class='reader-actions'><a class='btn btn-dark' href='index.html#latest'>Explore newsroom →</a>"+
+          "<a class='btn btn-ghost' href='profile.html'>Account settings</a></div>"+
+        "</div>"+
+      "</section>"+
+      "<section class='reader-stats'><div><strong>"+following.length+"</strong><span>Following</span></div>"+
+        "<div><strong>"+feed.length+"</strong><span>Stories in feed</span></div>"+
+        "<div><strong>"+(following.length ? "LIVE":"—")+"</strong><span>Personal feed</span></div></section>"+
+      "<section class='author-section reader-feed-section'><div class='section-head'><div><div class='eyebrow'>YOUR NEWSROOM FEED</div>"+
+        "<h2>Posts from people you follow</h2><p>Only contributors you follow appear here. Your feed updates as you follow more people.</p></div></div>"+
+        feedHtml+"</section>"+
+      "<section class='author-section reader-following-section'><div class='section-head'><div><div class='eyebrow'>YOUR FOLLOWING</div>"+
+        "<h2>People you follow</h2></div><a class='btn btn-ghost' href='index.html#latest'>Find contributors →</a></div>"+
+        followingList+"</section>"+
+      "<section class='reader-next-step'><div><div class='eyebrow'>WANT TO PUBLISH?</div>"+
+        "<h2>Become a PAPARAZZI contributor when you're ready.</h2><p>Readers stay readers until they choose to apply. Nothing on this page pretends you're a contributor.</p></div>"+
+        "<a class='btn btn-dark' href='become-paparazzi.html'>Become a PAPARAZZI →</a></section>";
+  } catch (error) {
+    root.innerHTML = empty("Could not load profile.","Please refresh and try again.","index.html","Back to newsroom →");
+    console.error("[PAPARAZZI] profile load failed", error);
+  }
 });
 </script>
 </body></html>
