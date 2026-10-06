@@ -89,6 +89,8 @@
   </div>
 </section>
 
+<section id="celebrity-paparazzo-banner" class="tip-banner"><div class="container"><div class="tip-banner-inner"><div><div class="eyebrow" style="color:#888">SEE SOMEONE THE GAMBIA SHOULD KNOW</div><h2>Be a Celebrity Paparazzo.</h2><p>Know a creator, musician, artist or popular figure around you? Be the PAPARAZZI who keeps their story close.</p></div><a class="btn btn-dark" href="become-paparazzi.html">Who do you want to paparazzi? →</a></div></div></section>
+
 <section class="tip-banner">
   <div class="container">
     <div class="tip-banner-inner">
@@ -109,5 +111,5 @@
 <script src="https://telegram.org/js/telegram-web-app.js?63"></script><script src="telegram-mini-app.js?v=37"></script><script src="config.js?v=37"></script>
 <script src="api.js?v=37"></script>
 <script src="app.js?v=34"></script>
-<script>window.addEventListener("load",function(){if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=37").catch(function(){});});</script>
+<script>(function(){document.addEventListener("DOMContentLoaded",async function(){try{const api=window.PAPARAZZI_API;if(!api)return;const r=await api.auth.getSession();if(!r?.data?.session)return;const p=await api.getMyProfile();if(p?.data?.is_paparazzi){const b=document.getElementById("celebrity-paparazzo-banner");if(b)b.hidden=true;}}catch(_){}});})();</script><script>window.addEventListener("load",function(){if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=37").catch(function(){});});</script>
 </body></html>
