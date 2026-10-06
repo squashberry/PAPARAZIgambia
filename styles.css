@@ -641,9 +641,11 @@ body.menu-open{touch-action:none}
   .reader-account-hero{grid-template-columns:1fr;gap:18px}
   .reader-avatar{width:82px;height:82px;font-size:25px}
   .reader-account-copy h1{font-size:42px}
-  .reader-stats{grid-template-columns:1fr}
-  .reader-stats>div{border-right:0;border-bottom:1px solid var(--line)}
-  .reader-stats>div:last-child{border-bottom:0}
+  .reader-stats{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .reader-stats>div{border-right:1px solid var(--line);border-bottom:0;padding:18px 10px;text-align:center}
+  .reader-stats>div:last-child{border-right:0}
+  .reader-stats strong{font-size:24px}
+  .reader-stats span{font-size:9px;letter-spacing:.08em}
   .reader-following-list{grid-template-columns:1fr}
   .reader-next-step{align-items:flex-start;flex-direction:column}
 }
