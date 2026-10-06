@@ -1120,7 +1120,8 @@
   async function initJoin(){
     const existingSession=await currentSession();
     const telegramInitData=String(window.PAPARAZZI_TELEGRAM?.initData||"").trim();
-    const openedFromTelegram=!!telegramInitData;\n    if(openedFromTelegram)document.body.classList.add("telegram-connect-mode");
+    const openedFromTelegram=!!telegramInitData;
+    if(openedFromTelegram)document.body.classList.add("telegram-connect-mode");
 
     const showTelegramConnect=async(session)=>{
       const forms=$("#auth-forms");
