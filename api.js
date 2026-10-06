@@ -276,6 +276,11 @@
         return normalize(await request("/api/contributors/apply",{method:"POST",body:JSON.stringify(payload),write:true}));
       },
 
+      async getMyPaparazzi(){ return normalize(await request("/api/celebrity-paparazzi/me")); },
+      async addMyPaparazzi(name){ return normalize(await request("/api/celebrity-paparazzi",{method:"POST",body:JSON.stringify({celebrity_name:name}),write:true})); },
+      async removeMyPaparazzi(id){ return normalize(await request("/api/celebrity-paparazzi/"+encodeURIComponent(id),{method:"DELETE",write:true})); },
+      async attachStoryPaparazzi(articleId,celebrityPaparazziId){ return normalize(await request("/api/articles/"+encodeURIComponent(articleId)+"/paparazzi",{method:"POST",body:JSON.stringify({celebrity_paparazzi_id:celebrityPaparazziId}),write:true})); },
+
       async follow(username){
         return normalize(await request("/api/follows/"+encodeURIComponent(username),{method:"POST",write:true}));
       },
