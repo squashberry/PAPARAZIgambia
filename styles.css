@@ -777,3 +777,8 @@ body.menu-open{touch-action:none}
 /* Keep the newsroom search locked beneath the fixed header while scrolling */
 .newsroom-search-shell{position:sticky!important;top:var(--pz-header-height,70px)!important;z-index:900!important}
 .newsroom-search-shell .container{position:relative}
+
+
+/* Sticky newsroom search fix */
+.newsroom-search-shell{position:sticky!important;top:var(--pz-header-height,70px)!important;z-index:900!important}
+.newsroom-search-shell .container{position:relative}
