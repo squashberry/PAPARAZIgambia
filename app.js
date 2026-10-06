@@ -386,8 +386,16 @@
       }
     };
     if(session){
-      if(account){account.textContent=label;account.title=displayName;account.href="profile.html";}
-      if(mobileAccount){mobileAccount.textContent=displayName;mobileAccount.href="profile.html";}
+      const telegramMode=!!window.PAPARAZZI_TELEGRAM?.initData;
+      if(account){
+        account.textContent=telegramMode?"CONNECT TELEGRAM":label;
+        account.title=telegramMode?"Connect your PAPARAZZI account to Telegram":displayName;
+        account.href=telegramMode?"join.html":"profile.html";
+      }
+      if(mobileAccount){
+        mobileAccount.textContent=telegramMode?"Connect Telegram":displayName;
+        mobileAccount.href=telegramMode?"join.html":"profile.html";
+      }
       [signout,mobileSignout].forEach(button=>{
         if(button){button.hidden=false;button.disabled=false;button.onclick=()=>doSignOut(button);}
       });
@@ -1120,10 +1128,30 @@
       if(!connect)return;
       if(forms)forms.hidden=true;
       connect.hidden=false;
-      const name=String(session?.user?.email||"").split("@")[0]||"your account";
+      const profileResult=await supabase.getMyProfile();
+      const profile=profileResult?.data||{};
+      const name=String(profile?.display_name||session?.user?.email||"your account").trim();
       const nameEl=$("#telegram-connect-name");
       if(nameEl)nameEl.textContent=name;
       const status=$("#telegram-connect-status");
+      const title=connect.querySelector("h2");
+      const copy=connect.querySelector("p");
+      const helper=connect.querySelectorAll("p")[1];
+      if(!profile.is_paparazzi){
+        if(title)title.textContent="You’re not a PAPARAZZI yet.";
+        if(copy)copy.textContent="Your PAPARAZZI account is signed in, but Telegram story tools are available after you join the PAPARAZZI newsroom.";
+        if(helper)helper.textContent="Join PAPARAZZI first. When your contributor profile is ready, you’ll be brought straight back here to connect the bot.";
+        button.hidden=false;
+        button.textContent="Join PAPARAZZI →";
+        button.href="become-paparazzi.html?return_to="+encodeURIComponent("join.html");
+        button.target="_self";
+        status.textContent="One more step: become a PAPARAZZI contributor.";
+        status.className="status-box show";
+        return;
+      }
+      if(title)title.textContent="Connect your PAPARAZZI account.";
+      if(copy)copy.textContent="Your PAPARAZZI contributor account is ready. The next step is simply to connect it to @PaparazziGambiaBot.";
+      if(helper)helper.textContent="Telegram is not your login. Your PAPARAZZI account stays the account you use on the website.";
       const button=$("#telegram-connect-button");
       if(!status||!button)return;
       status.textContent="Preparing your secure Telegram connection…";
