@@ -1111,8 +1111,6 @@
 
   async function initJoin(){
     const existingSession=await currentSession();
-    let rememberedSignedIn=false;
-    try{rememberedSignedIn=localStorage.getItem("paparazzi_signed_in")==="1";}catch(_){}
     const telegramInitData=String(window.PAPARAZZI_TELEGRAM?.initData||"").trim();
     const openedFromTelegram=!!telegramInitData;
 
@@ -1159,11 +1157,6 @@
         ? "author.html?u="+encodeURIComponent(existingProfile.username)
         : "index.html#your-paparazzi";
       location.replace(target);
-      return;
-    }
-    if(rememberedSignedIn){
-      try{localStorage.removeItem("paparazzi_signed_in");}catch(_){}
-      location.replace("index.html");
       return;
     }
     const requestedNext=new URLSearchParams(location.search).get("next");
