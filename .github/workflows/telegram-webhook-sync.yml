@@ -13,34 +13,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
-          response="$(curl --silent --show-error --max-time 30 -w '\\nHTTP_STATUS:%{http_code}' \
-            "https://paparazzi-api.squashberrypay.workers.dev/api/telegram/setup?source=github-${GITHUB_RUN_ID}")"
-
-          echo "$response"
-          http_status="$(printf '%s\\n' "$response" | sed -n 's/^HTTP_STATUS://p' | tail -1)"
-          body="$(printf '%s\\n' "$response" | sed '$d')"
-          test "$http_status" = "200" || { echo "Telegram setup returned HTTP $http_status"; exit 1; }
+          setup_url="https://paparazzi-api.squashberrypay.workers.dev/api/telegram/setup?source=github-${GITHUB_RUN_ID}"
+          http_status="$(curl --silent --show-error --max-time 30 -o /tmp/setup_body -w '%{http_code}' "$setup_url")"
+          body="$(cat /tmp/setup_body)"
+          echo "$body" | jq .
+          echo "Telegram setup HTTP status: $http_status"
+          test "$http_status" = "200"
 
           webhook_url="$(echo "$body" | jq -r '.webhook_info.url // empty')"
           webhook_ok="$(echo "$body" | jq -r '.ok // false')"
           last_error="$(echo "$body" | jq -r '.webhook_info.last_error_message // empty')"
-
           test "$webhook_ok" = "true"
           test -n "$webhook_url"
           [[ "$webhook_url" == */api/telegram/webhook/* ]]
-
-          if [[ -n "$last_error" ]]; then
-            echo "::warning::Telegram reports: $last_error"
-          fi
-
-          echo "Telegram webhook reconciled: $webhook_url"
+          if [[ -n "$last_error" ]]; then echo "::warning::Telegram reports: $last_error"; fi
 
           probe="$(curl --fail --silent --show-error --max-time 30 \
-            -X POST \
-            -H "Content-Type: application/json" \
+            -X POST -H "Content-Type: application/json" \
             --data "{\"update_id\":${GITHUB_RUN_ID},\"message\":{\"message_id\":1,\"from\":{\"id\":0,\"is_bot\":false,\"first_name\":\"PAPARAZZI Health Check\"},\"chat\":{\"id\":0,\"type\":\"private\"},\"date\":${GITHUB_RUN_ATTEMPT},\"text\":\"/start\"}}" \
             "$webhook_url")"
-
           echo "Webhook transport probe response: $probe"
           echo "Telegram webhook transport probe: HTTP 200"
