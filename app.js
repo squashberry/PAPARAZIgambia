@@ -1139,12 +1139,22 @@
     if(telegramMode && telegramAuth){
       const switcher=$(".switcher");
       const progress=$(".signup-progress");
-      if(switcher)switcher.hidden=true;
       if(progress)progress.hidden=true;
       signIn.hidden=true;
       signUp.hidden=true;
       if(verifyPanel)verifyPanel.hidden=true;
       telegramAuth.hidden=false;
+      const telegramFallback=$("#telegram-email-fallback");
+      const telegramUseEmail=$("#telegram-use-email");
+      if(telegramFallback)telegramFallback.hidden=false;
+      if(telegramUseEmail)telegramUseEmail.onclick=()=>{
+        telegramAuth.hidden=true;
+        if(switcher)switcher.hidden=false;
+        if(progress)progress.hidden=true;
+        signIn.hidden=false;
+        signUp.hidden=true;
+        setMode("signin");
+      };
 
       const setTelegramStatus=(message,kind="")=>{
         if(!telegramStatus)return;
