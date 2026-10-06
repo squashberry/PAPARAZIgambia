@@ -525,25 +525,21 @@
   ];
 
   async function fetchStories(limit=12,offset=0,filters={}){
-    if(!supabase)return {data:[],error:null};
+    if(!supabase?.getArticles)return {data:[],error:null};
     try{
-      let query=supabase.from("paparazi_articles")
-        .select("id,title,slug,excerpt,body,cover_url,media_urls,category,status,created_at,published_at,paparazi_profiles(display_name,username,avatar_url)")
-        .eq("status","published")
-        .order("published_at",{ascending:false,nullsFirst:false})
-        .range(Math.max(0,offset),Math.max(0,offset)+Math.max(1,limit)-1);
-      const category=String(filters.category||"").trim();
+      const tag=String(filters.tag||"").replace(/^#/,"").trim();
       const search=String(filters.search||"").trim();
-      if(category && category.toLowerCase()!=="all")query=query.eq("category",category);
+      if(search && search.startsWith("#")) return supabase.getArticles({status:"published",limit,offset,tag:search});
+      const result=await withTimeout(supabase.getArticles({status:"published",limit,offset,tag}),5000,{data:[],error:{message:"timeout"}});
+      let data=result?.data||[];
+      const category=String(filters.category||"").trim();
+      if(category && category.toLowerCase()!=="all")data=data.filter(x=>String(x.category||"").toLowerCase()===category.toLowerCase());
       if(search){
-        const safe=search.replace(/[(),]/g," ").replace(/%/g,"\\%");
-        query=query.or("title.ilike.%"+safe+"%,excerpt.ilike.%"+safe+"%,body.ilike.%"+safe+"%,category.ilike.%"+safe+"%");
+        const q=search.toLowerCase();
+        data=data.filter(x=>[x.title,x.excerpt,x.body,x.category,x.paparazi_profiles?.display_name,...(Array.isArray(x.hashtags)?x.hashtags:[])].some(v=>String(v||"").toLowerCase().includes(q)));
       }
-      const result=await withTimeout(query,5000,{data:[],error:{message:"timeout"}});
-      return {data:result?.data||[],error:result?.error||null};
-    }catch(error){
-      return {data:[],error};
-    }
+      return {data,error:result?.error||null};
+    }catch(error){return {data:[],error};}
   }
 
   function coverImage(url,alt="",loading="lazy"){
@@ -655,10 +651,14 @@
     });
 
     const grid=$("#newsroom-grid"),sentinel=$("#newsroom-sentinel"),search=$("#newsroom-search");
-    const categorySelect=$("#newsroom-category"),count=$("#newsroom-count"),status=$("#newsroom-status"),moreStatus=$("#newsroom-more-status");
+    const categorySelect=$("#newsroom-category"),hashtagRail=$("#newsroom-hashtags"),count=$("#newsroom-count"),status=$("#newsroom-status"),moreStatus=$("#newsroom-more-status");
     let offset=0,loading=false,done=false,requestToken=0,searchTimer=null;
 
-    const state=()=>({search:search?.value.trim()||"",category:categorySelect?.value||"all"});
+    const state=()=>{
+      const raw=search?.value.trim()||"";
+      const tagMatch=raw.match(/(^|\s)#([\p{L}\p{N}_-]{1,40})/u);
+      return {search:tagMatch?raw.replace(tagMatch[0]," ").trim():raw,category:categorySelect?.value||"all",tag:tagMatch?tagMatch[2]:""};
+    };
     const normalize=story=>({...story,
       published_at:story.published_at||story.created_at||new Date().toISOString(),
       created_at:story.created_at||story.published_at||new Date().toISOString(),
@@ -666,6 +666,21 @@
     });
     const categories=["People","Events","Nightlife","Style","Culture","Viral"];
     if(categorySelect)categorySelect.innerHTML='<option value="all">All beats</option>'+categories.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+
+    const renderHashtags=stories=>{
+      if(!hashtagRail)return;
+      const counts=new Map();
+      stories.forEach(s=>(Array.isArray(s.hashtags)?s.hashtags:[]).forEach(tag=>{
+        const clean=String(tag).replace(/^#/,"").toLowerCase(); if(clean)counts.set(clean,(counts.get(clean)||0)+1);
+      }));
+      const tags=[...counts.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,18);
+      hashtagRail.innerHTML=tags.length
+        ? "<span class='hashtag-label'>TRENDING TAGS</span>"+tags.map(([tag,n])=>"<button type='button' class='hashtag-chip' data-tag='"+esc(tag)+"'>#"+esc(tag)+" <small>"+n+"</small></button>").join("")
+        : "";
+      hashtagRail.querySelectorAll(".hashtag-chip").forEach(b=>b.onclick=()=>{
+        search.value="#"+b.dataset.tag; loadMore(true);
+      });
+    };
 
     const loadMore=async(reset=false)=>{
       if(loading||(!reset&&done))return;
@@ -676,6 +691,8 @@
       const result=await fetchStories(12,offset,state());
       if(token!==requestToken)return;
       const stories=(result.data||[]).map(normalize);
+      if(reset)renderHashtags(stories);
+      else if(stories.length)renderHashtags(stories);
       grid.insertAdjacentHTML("beforeend",stories.map((story,i)=>latestItem(story,offset+i)).join(""));
       installImageWatermarks(grid);
       offset+=stories.length;
