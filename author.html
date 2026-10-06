@@ -13,10 +13,10 @@
 
 <header class="site-header"><div class="header-inner">
 <a class="brand" href="index.html"><div class="brand-mark">PZ</div><div class="brand-copy"><div class="brand-name">PAPARAZZI🇬🇲</div><div class="brand-sub">Community profile</div></div></a>
-<nav class="nav"><a href="index.html">HOME</a><a href="index.html#latest">LATEST</a><a href="index.html#beats">BEATS</a><a href="why-join.html">WHY JOIN</a><a href="submit.html">SEND A TIP</a><a href="advertise.html">ADVERTISE</a><a id="nav-notifications" class="nav-icon-link" href="notifications.html" hidden aria-label="Notifications">🔔</a><a id="nav-account" class="nav-cta" href="join.html">SIGN IN</a></nav>
+<nav class="nav"><a href="index.html">HOME</a><a href="index.html#latest">LATEST</a><a href="index.html#beats">BEATS</a><a href="why-join.html">WHY JOIN</a><a href="submit.html">TELL PAPARAZZI</a><a href="advertise.html">ADVERTISE</a><a id="nav-notifications" class="nav-icon-link" href="notifications.html" hidden aria-label="Notifications">🔔</a><a id="nav-account" class="nav-cta" href="join.html">SIGN IN</a></nav>
 <button id="menu-btn" class="menu-btn" aria-label="Open menu" aria-expanded="false">☰</button>
 </div></header>
-<div id="mobile-nav" class="mobile-nav" aria-hidden="true"><a href="index.html">Home</a><a href="index.html#latest">Latest</a><a href="index.html#beats">Beats</a><a href="why-join.html">Why join PAPARAZZI</a><a href="submit.html">Send a tip</a><a href="advertise.html">Advertise</a><a id="mobile-notifications" href="notifications.html" hidden>🔔 Notifications</a><a id="mobile-account" href="join.html">Sign in</a></div>
+<div id="mobile-nav" class="mobile-nav" aria-hidden="true"><a href="index.html">Home</a><a href="index.html#latest">Latest</a><a href="index.html#beats">Beats</a><a href="why-join.html">Why join PAPARAZZI</a><a href="submit.html">Tell Paparazzi</a><a href="advertise.html">Advertise</a><a id="mobile-notifications" href="notifications.html" hidden>🔔 Notifications</a><a id="mobile-account" href="join.html">Sign in</a></div>
 
 <main><div class="container"><div id="author-root" class="author-page"><div class="empty-state author-loading"><h3>Loading profile…</h3><p>Getting the latest community information.</p></div></div></div></main>
 
@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               ? "<div class='social-row'>"+social.map(x=>"<a href='"+esc(x[1])+"' target='_blank' rel='noopener noreferrer'>"+esc(x[0])+" ↗</a>").join("")+"</div>":"")+
             "<div class='author-actions'><button id='follow-author' class='btn btn-dark'>"+
               (alreadyFollowing?"Following ✓":"Follow "+esc(p.display_name||p.username)+" →")+
-            "</button><a class='btn btn-ghost' href='submit.html'>Send a tip</a></div>"+
+            "</button><a class='btn btn-ghost' href='submit.html'>Tell Paparazzi</a></div>"+
           "</div>"+
         "</section>"+
         "<section class='author-overview'><div><strong>"+articles.length+"</strong><span>Published stories</span></div>"+
