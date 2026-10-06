@@ -386,8 +386,8 @@
       }
     };
     if(session){
-      if(account){account.textContent=label;account.title=displayName;account.href=profile?.username?"author.html?u="+encodeURIComponent(profile.username):"index.html#your-paparazzi";}
-      if(mobileAccount){mobileAccount.textContent=displayName;mobileAccount.href=profile?.username?"author.html?u="+encodeURIComponent(profile.username):"index.html#your-paparazzi";}
+      if(account){account.textContent=label;account.title=displayName;account.href="profile.html";}
+      if(mobileAccount){mobileAccount.textContent=displayName;mobileAccount.href="profile.html";}
       [signout,mobileSignout].forEach(button=>{
         if(button){button.hidden=false;button.disabled=false;button.onclick=()=>doSignOut(button);}
       });
