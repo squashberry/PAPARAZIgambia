@@ -712,3 +712,15 @@ body.menu-open{touch-action:none}
   .newsroom-search-row input,.newsroom-search-row select{height:46px}
   .newsroom-meta{font-size:.58rem}
 }
+
+/* Hashtag discovery and grouping */
+.hashtag-rail{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;padding-top:2px}
+.hashtag-label{font-size:.68rem;letter-spacing:.14em;font-weight:800;color:#777;margin-right:4px}
+.hashtag-chip{border:1px solid #dedbd6;background:#fff;border-radius:999px;padding:8px 11px;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer;color:#151515;transition:transform .15s ease,background .15s ease}
+.hashtag-chip:hover{transform:translateY(-1px);background:#f4f2ee}
+.hashtag-chip small{font-size:.68rem;color:#888;margin-left:3px}
+.story-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.story-tags span,.story-tags a{display:inline-flex;align-items:center;border:1px solid #e1ded9;border-radius:999px;padding:4px 8px;background:#faf9f7;color:#4d4944;font-size:.68rem;font-weight:700;text-decoration:none}
+.story-tags-large{margin:14px 0 2px}
+.story-tags-large a:hover{background:#111;color:#fff;border-color:#111}
+@media(max-width:640px){.hashtag-rail{gap:6px}.hashtag-chip{padding:7px 9px}.hashtag-label{width:100%;margin-bottom:1px}}
