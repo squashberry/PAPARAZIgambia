@@ -1,4 +1,4 @@
-const CACHE="paparazzi-v38";
+const CACHE="paparazzi-v43";
 const CORE=[
   "./",
   "./index.html",
@@ -6,14 +6,24 @@ const CORE=[
   "./story.html",
   "./join.html",
   "./profile.html",
+  "./author.html",
   "./studio.html",
   "./submit.html",
+  "./notifications.html",
+  "./become-paparazzi.html",
+  "./celebrity-apply.html",
+  "./why-join.html",
+  "./advertise.html",
+  "./contributor-rules.html",
+  "./privacy.html",
+  "./terms.html",
   "./404.html",
   "./offline.html",
   "./styles.css",
   "./app.js",
   "./api.js",
   "./config.js",
+  "./telegram-mini-app.js",
   "./favicon.svg",
   "./manifest.webmanifest"
 ];
