@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://squashberry.github.io/PAPARAZZIgambia/</loc><priority>1.0</priority></url>
-  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/index.html</loc><priority>0.8</priority></url>
-  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/submit.html</loc><priority>0.5</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/newsroom.html</loc><priority>0.9</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/submit.html</loc><priority>0.6</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/why-join.html</loc><priority>0.6</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/advertise.html</loc><priority>0.4</priority></url>
   <url><loc>https://squashberry.github.io/PAPARAZZIgambia/join.html</loc><priority>0.4</priority></url>
   <url><loc>https://squashberry.github.io/PAPARAZZIgambia/studio.html</loc><priority>0.3</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/privacy.html</loc><priority>0.2</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/terms.html</loc><priority>0.2</priority></url>
+  <url><loc>https://squashberry.github.io/PAPARAZZIgambia/contributor-rules.html</loc><priority>0.2</priority></url>
 </urlset>
