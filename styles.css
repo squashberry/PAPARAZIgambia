@@ -2382,3 +2382,8 @@ body[data-page] .container{
     backdrop-filter:blur(12px);
   }
 }
+
+/* Celebrity state + status compatibility */
+[data-page="celebrity"] .status{display:none}
+[data-page="celebrity"] .status.show{display:block}
+[data-page="celebrity"].auth-checking .celebrity-app{visibility:hidden}
