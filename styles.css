@@ -1891,3 +1891,494 @@ body[data-page="studio"]{
     max-height:calc(100vh - 82px);
   }
 }
+
+
+/* PAPARAZZI web-app system v42
+   Site-wide consistency layer for desktop + mobile. */
+:root{
+  --app-bg:#f3f1ec;
+  --app-surface:#fff;
+  --app-surface-2:#f8f7f4;
+  --app-ink:#101010;
+  --app-muted:#77716a;
+  --app-line:rgba(16,16,16,.095);
+  --app-accent:#111;
+  --app-radius:16px;
+}
+html{background:var(--app-bg)}
+body[data-page]{
+  background:
+    linear-gradient(180deg,#f7f6f2 0,#f3f1ec 100%);
+  color:var(--app-ink);
+}
+body[data-page] .site-header{
+  min-height:64px;
+}
+body[data-page] .header-inner{
+  max-width:1360px;
+  padding:9px 18px;
+}
+body[data-page] .brand-mark{
+  width:34px;height:34px;border-radius:9px;
+}
+body[data-page] .brand-name{font-size:.94rem}
+body[data-page] .brand-sub{font-size:.52rem}
+body[data-page] .nav a{
+  font-size:.72rem;
+  padding:8px 9px;
+}
+body[data-page] main{
+  min-height:calc(100vh - 64px);
+}
+body[data-page] .footer{
+  margin-top:16px;
+  padding:24px 0 14px;
+}
+body[data-page] .footer-grid{
+  display:none;
+}
+body[data-page] .footer-bottom{
+  margin-top:0;
+  padding-top:0;
+  border-top:0;
+}
+body[data-page] .container{
+  max-width:1320px;
+}
+
+/* Shared app surfaces */
+[data-page="join"] .auth-layout,
+[data-page="become"] .auth-layout,
+[data-page="submit"] .split-panel,
+[data-page="notifications"] .studio-grid,
+[data-page="advertise"] .ad-page-grid{
+  gap:12px;
+}
+[data-page="join"] .auth-card,
+[data-page="become"] .auth-card,
+[data-page="submit"] .panel,
+[data-page="notifications"] .panel,
+[data-page="advertise"] .panel,
+[data-page="why"] .panel{
+  border-color:var(--app-line);
+  border-radius:18px;
+  box-shadow:0 10px 26px rgba(16,16,16,.04);
+}
+[data-page="join"] .auth-aside,
+[data-page="become"] .auth-aside{
+  border-radius:18px;
+}
+
+/* Utility page heads */
+[data-page="advertise"] .page-head,
+[data-page="why"] .page-head,
+[data-page="notifications"] .page-head,
+[data-page="submit"] .page-head{
+  padding:20px 0 16px;
+}
+[data-page="advertise"] .page-head h1,
+[data-page="why"] .page-head h1,
+[data-page="submit"] .page-head h1{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:clamp(2.2rem,5vw,4rem);
+  line-height:.98;
+  letter-spacing:-.055em;
+}
+[data-page="notifications"] .page-head h1{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:clamp(2rem,4vw,3.2rem);
+  line-height:1;
+  letter-spacing:-.05em;
+}
+
+/* Join / contributor onboarding */
+[data-page="join"] .auth-shell,
+[data-page="become"] .auth-shell{
+  padding:22px 0 70px;
+}
+[data-page="join"] .auth-layout,
+[data-page="become"] .auth-layout{
+  align-items:start;
+}
+[data-page="join"] .auth-aside h1,
+[data-page="become"] .auth-aside h1{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:clamp(2rem,4vw,3.7rem);
+  letter-spacing:-.055em;
+  line-height:1;
+}
+[data-page="join"] .auth-card,
+[data-page="become"] .auth-card{
+  padding:24px;
+}
+[data-page="join"] .switcher{
+  margin-bottom:12px;
+  width:100%;
+}
+[data-page="join"] .switcher button{
+  flex:1;
+  text-align:center;
+}
+[data-page="join"] .auth-panel h2,
+[data-page="become"] .auth-card h2{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:1.25rem;
+}
+
+/* Tips / notifications */
+[data-page="submit"] .submit-shell,
+[data-page="notifications"] main{
+  padding-top:18px;
+}
+[data-page="submit"] .state-step h2,
+[data-page="notifications"] .panel h2{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:1.15rem;
+}
+[data-page="submit"] .state-progress,
+[data-page="join"] .auth-progress,
+[data-page="become"] .state-progress{
+  margin-bottom:14px;
+}
+[data-page="notifications"] .page-head{
+  padding-bottom:10px;
+}
+[data-page="notifications"] .studio-grid{
+  grid-template-columns:minmax(0,1fr) 280px;
+}
+
+/* Why / advertise */
+[data-page="why"] .hero{
+  padding:18px 0 12px;
+}
+[data-page="why"] .hero .page-head{
+  padding:10px 0 8px;
+}
+[data-page="why"] .benefit-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+[data-page="why"] .benefit-grid .panel{
+  min-height:180px;
+  padding:20px;
+}
+[data-page="why"] .benefit-grid h3,
+[data-page="advertise"] .ad-preview h2{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  letter-spacing:-.03em;
+}
+[data-page="advertise"] .ad-page-grid{
+  align-items:stretch;
+}
+[data-page="advertise"] .ad-preview{
+  border-radius:18px;
+}
+
+/* Story detail: app chrome, reader surface */
+[data-page="story"] .story-reader{
+  padding:18px 0 70px;
+}
+[data-page="story"] .story-reader-head{
+  max-width:1040px;
+}
+[data-page="story"] .story-reader-head h1{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:clamp(2.35rem,6vw,5.6rem);
+  line-height:.94;
+  letter-spacing:-.06em;
+}
+[data-page="story"] .story-cover{
+  border-radius:20px;
+  box-shadow:0 14px 38px rgba(16,16,16,.08);
+}
+[data-page="story"] .story-body{
+  background:rgba(255,255,255,.62);
+  border:1px solid var(--app-line);
+  border-radius:18px;
+  padding:28px;
+}
+[data-page="story"] .story-actions,
+[data-page="story"] .story-head-row{
+  gap:8px;
+}
+
+/* Legal / utility documents */
+[data-page="legal"] .legal-page{
+  max-width:920px;
+  margin:24px auto 80px;
+  padding:26px;
+  border:1px solid var(--app-line);
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 10px 26px rgba(16,16,16,.04);
+}
+[data-page="legal"] .legal-page h1{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:2rem;
+  letter-spacing:-.045em;
+}
+[data-page="legal"] .legal-page h2{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:1.05rem;
+}
+
+/* Celebrity application */
+[data-page="celebrity"]{
+  background:var(--app-bg);
+}
+[data-page="celebrity"] .celebrity-app{
+  max-width:1060px;
+  margin:0 auto;
+  padding:16px;
+}
+[data-page="celebrity"] .celebrity-topbar{
+  height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+[data-page="celebrity"] .celebrity-brand{
+  font-size:.72rem;font-weight:950;letter-spacing:.16em;
+}
+[data-page="celebrity"] .celebrity-back{
+  display:inline-flex;align-items:center;
+  font-size:.7rem;font-weight:850;
+  color:#6f6962;
+}
+[data-page="celebrity"] .celebrity-hero{
+  padding:20px 22px;
+  border:1px solid var(--app-line);
+  border-radius:18px;
+  background:#111;
+  color:#fff;
+  margin-bottom:10px;
+}
+[data-page="celebrity"] .celebrity-hero h1{
+  font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:clamp(2rem,5vw,4.1rem);
+  line-height:.96;
+  letter-spacing:-.06em;
+  margin:6px 0 8px;
+}
+[data-page="celebrity"] .celebrity-hero p{
+  max-width:700px;
+  margin:0;
+  color:#bdbdbd;
+  font-size:.85rem;
+}
+[data-page="celebrity"] .celebrity-card{
+  padding:18px;
+  border:1px solid var(--app-line);
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 10px 26px rgba(16,16,16,.04);
+}
+[data-page="celebrity"] .celebrity-steps{
+  display:flex;
+  gap:5px;
+  overflow:auto;
+  margin-bottom:14px;
+  scrollbar-width:none;
+}
+[data-page="celebrity"] .celebrity-step{
+  border:1px solid var(--app-line);
+  background:#f7f6f2;
+  border-radius:9px;
+  padding:7px 9px;
+  font-size:.58rem;
+  font-weight:900;
+  white-space:nowrap;
+}
+[data-page="celebrity"] .celebrity-step.on{
+  background:#111;color:#fff;border-color:#111;
+}
+[data-page="celebrity"] .celebrity-state{display:none}
+[data-page="celebrity"] .celebrity-state.on{display:block}
+[data-page="celebrity"] .celebrity-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+}
+[data-page="celebrity"] .celebrity-grid .field.full{grid-column:1/-1}
+[data-page="celebrity"] .celebrity-choice{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+[data-page="celebrity"] .celebrity-choice button{
+  border:1px solid var(--app-line);
+  background:#fff;
+  border-radius:12px;
+  min-height:46px;
+  padding:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+[data-page="celebrity"] .celebrity-choice button.on{
+  background:#111;color:#fff;border-color:#111;
+}
+[data-page="celebrity"] .celebrity-actions{
+  display:flex;gap:8px;margin-top:16px;
+}
+[data-page="celebrity"] .celebrity-actions button{
+  flex:1;
+}
+[data-page="celebrity"] .celebrity-preview{
+  background:#f6f4ef;
+  border:1px solid var(--app-line);
+  border-radius:12px;
+  padding:14px;
+}
+[data-page="celebrity"] .celebrity-status{
+  border-radius:12px;
+  padding:11px 13px;
+  margin-bottom:10px;
+}
+[data-page="celebrity"] body.auth-checking .celebrity-app{visibility:hidden}
+
+/* Compact mobile product */
+@media(max-width:720px){
+  body[data-page] .container{padding-left:12px;padding-right:12px}
+  body[data-page] .footer{display:none}
+  body[data-page] .site-header .brand-sub{display:none}
+  body[data-page] .site-header .nav{display:none}
+  body[data-page] .site-header .header-inner{
+    min-height:56px;
+    padding:8px 12px;
+  }
+  body[data-page] .menu-btn{
+    display:block;
+    padding:7px 9px;
+    border-radius:10px;
+  }
+
+  /* No marketing/editorial explanations on the small screen. */
+  [data-page="join"] .auth-aside,
+  [data-page="become"] .auth-aside,
+  [data-page="submit"] .split-panel>aside,
+  [data-page="why"] .page-head p,
+  [data-page="advertise"] .page-head p,
+  [data-page="notifications"] .page-head p,
+  [data-page="submit"] .page-head p,
+  [data-page="celebrity"] .celebrity-hero p{
+    display:none;
+  }
+
+  [data-page="join"] .auth-shell,
+  [data-page="become"] .auth-shell{
+    padding:10px 0 40px;
+  }
+  [data-page="join"] .auth-card,
+  [data-page="become"] .auth-card{
+    padding:15px;
+    border-radius:14px;
+  }
+  [data-page="join"] .auth-layout,
+  [data-page="become"] .auth-layout{
+    display:block;
+  }
+  [data-page="submit"] .page-head,
+  [data-page="notifications"] .page-head,
+  [data-page="advertise"] .page-head,
+  [data-page="why"] .page-head{
+    padding:10px 0;
+  }
+  [data-page="submit"] .page-head h1,
+  [data-page="advertise"] .page-head h1,
+  [data-page="why"] .page-head h1{
+    font-size:1.55rem;
+  }
+  [data-page="submit"] .split-panel,
+  [data-page="notifications"] .studio-grid,
+  [data-page="advertise"] .ad-page-grid{
+    grid-template-columns:1fr;
+  }
+  [data-page="submit"] .split-panel>.panel,
+  [data-page="notifications"] .panel,
+  [data-page="advertise"] .panel{
+    padding:14px;
+    border-radius:14px;
+  }
+  [data-page="why"] .hero{padding:5px 0}
+  [data-page="why"] .benefit-grid{
+    grid-template-columns:1fr;
+    gap:7px;
+  }
+  [data-page="why"] .benefit-grid .panel{
+    min-height:0;
+    padding:14px;
+  }
+  [data-page="why"] .benefit-grid p{
+    display:none;
+  }
+  [data-page="why"] .desk-grid{
+    display:none;
+  }
+  [data-page="story"] .story-reader{
+    padding-top:8px;
+  }
+  [data-page="story"] .story-reader-head h1{
+    font-size:clamp(2rem,10vw,3.3rem);
+  }
+  [data-page="story"] .story-cover{
+    min-height:250px;
+    border-radius:14px;
+  }
+  [data-page="story"] .story-body{
+    padding:18px;
+    border-radius:14px;
+    font-size:1rem;
+  }
+  [data-page="legal"] .legal-page{
+    margin:10px 12px 50px;
+    padding:18px;
+    border-radius:14px;
+  }
+  [data-page="notifications"] .studio-grid{
+    gap:7px;
+  }
+  [data-page="notifications"] .studio-grid>aside{
+    display:none;
+  }
+  [data-page="notifications"] .section-head p{
+    display:none;
+  }
+  [data-page="celebrity"] .celebrity-app{
+    padding:6px 10px 45px;
+  }
+  [data-page="celebrity"] .celebrity-topbar{
+    height:38px;
+  }
+  [data-page="celebrity"] .celebrity-hero{
+    padding:14px;
+    margin-bottom:7px;
+    border-radius:13px;
+  }
+  [data-page="celebrity"] .celebrity-hero h1{
+    font-size:1.55rem;
+  }
+  [data-page="celebrity"] .celebrity-card{
+    padding:12px;
+    border-radius:13px;
+  }
+  [data-page="celebrity"] .celebrity-grid{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  [data-page="celebrity"] .celebrity-choice{
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+  }
+  [data-page="celebrity"] .celebrity-choice button{
+    min-height:42px;
+    font-size:.72rem;
+  }
+  [data-page="celebrity"] .celebrity-actions{
+    position:sticky;
+    bottom:8px;
+    z-index:30;
+    margin-left:-4px;margin-right:-4px;
+    padding:7px;
+    border:1px solid var(--app-line);
+    border-radius:12px;
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(12px);
+  }
+}
