@@ -558,6 +558,7 @@
       box=document.createElement("div");
       box.className="pz-autocomplete";
       box.setAttribute("role","listbox");
+      box.hidden=true;
       row.appendChild(box);
     }
     let active=-1;
@@ -565,34 +566,55 @@
     const normalizeItem=(item,type="story")=>{
       if(type==="category")return {type,label:item,value:item,meta:"Beat"};
       if(type==="tag")return {type,label:"#"+String(item).replace(/^#/,""),value:"#"+String(item).replace(/^#/,""),meta:"Hashtag"};
-      return {type:"story",label:String(item.title||"Untitled story"),value:String(item.title||""),meta:String(item.category||"Story")};
+      return {
+        type:"story",
+        label:String(item.title||"Untitled story"),
+        value:String(item.title||""),
+        meta:String(item.category||"Story"),
+        item
+      };
     };
 
     const render=()=>{
       const q=input.value.trim().toLowerCase();
-      const pool=Array.isArray(getPool?.())?getPool():[];
+      const rawPool=Array.isArray(getPool?.())?getPool():[];
+      const pool=rawPool.filter(Boolean);
       const categories=["People","Events","Nightlife","Style","Culture","Viral"];
-      const tags=[...new Set(pool.flatMap(x=>Array.isArray(x.hashtags)?x.hashtags:[]).map(x=>String(x).replace(/^#/,"")).filter(Boolean))].slice(0,8);
+      const tags=[...new Set(pool.flatMap(x=>Array.isArray(x.hashtags)?x.hashtags:[]).map(x=>String(x).replace(/^#/,"")).filter(Boolean))];
       const candidates=[
         ...pool.map(x=>normalizeItem(x)),
         ...categories.map(x=>normalizeItem(x,"category")),
         ...tags.map(x=>normalizeItem(x,"tag"))
       ];
       const seen=new Set();
-      const filtered=candidates.filter(item=>{
-        const key=(item.type+"|"+item.label).toLowerCase();
-        if(seen.has(key))return false;
-        seen.add(key);
-        return !q||key.includes(q)||item.meta.toLowerCase().includes(q);
-      }).slice(0,6);
+      const rank=item=>{
+        if(!q)return item.type==="story"?0:item.type==="tag"?1:2;
+        const text=(item.label+" "+item.meta+" "+(item.item?.excerpt||"")+" "+(item.item?.paparazi_profiles?.display_name||item.item?.author?.display_name||"")).toLowerCase();
+        if(text===q)return 0;
+        if(item.label.toLowerCase().startsWith(q))return 1;
+        if(item.label.toLowerCase().includes(q))return 2;
+        if(text.includes(q))return 3;
+        return 99;
+      };
+      const filtered=candidates
+        .filter(item=>{
+          const key=(item.type+"|"+item.label).toLowerCase();
+          if(seen.has(key))return false;
+          seen.add(key);
+          return !q||rank(item)<99;
+        })
+        .sort((a,b)=>rank(a)-rank(b))
+        .slice(0,7);
 
-      if(!q||!filtered.length){box.innerHTML="";box.hidden=true;active=-1;return;}
-      box.innerHTML=filtered.map((item,i)=>
-        "<button type='button' class='pz-suggestion"+(i===0?" is-active":"")+"' role='option' data-index='"+i+"' data-value='"+esc(item.value)+"' data-type='"+esc(item.type)+"'>"+
-        "<span class='pz-suggestion-main'>"+esc(item.label)+"</span><small>"+esc(item.meta)+"</small></button>"
-      ).join("");
+      if(!filtered.length){box.innerHTML="";box.hidden=true;active=-1;return;}
+      box.innerHTML=(q?"":"<div class='pz-search-label'>Recommended</div>")+
+        filtered.map((item,i)=>
+          "<button type='button' class='pz-suggestion"+(i===0?" is-active":"")+"' role='option' data-index='"+i+"' data-value='"+esc(item.value)+"' data-type='"+esc(item.type)+"'>"+
+          "<span class='pz-suggestion-main'>"+esc(item.label)+"</span><small>"+esc(item.meta)+"</small></button>"
+        ).join("");
       box.hidden=false;
       active=0;
+
       box.querySelectorAll(".pz-suggestion").forEach(btn=>btn.addEventListener("click",()=>{
         input.value=btn.dataset.value||"";
         box.hidden=true;
@@ -602,7 +624,7 @@
     };
 
     input.addEventListener("input",render);
-    input.addEventListener("focus",()=>{if(input.value.trim())render();});
+    input.addEventListener("focus",render);
     input.addEventListener("keydown",event=>{
       if(box.hidden)return;
       const buttons=[...box.querySelectorAll(".pz-suggestion")];
@@ -610,7 +632,7 @@
       if(event.key==="ArrowDown"){event.preventDefault();active=(active+1)%buttons.length;}
       else if(event.key==="ArrowUp"){event.preventDefault();active=(active-1+buttons.length)%buttons.length;}
       else if(event.key==="Enter"&&active>=0){event.preventDefault();buttons[active].click();return;}
-      else if(event.key==="Escape"){box.hidden=true;active=-1;return;}
+      else if(event.key==="Escape"){event.preventDefault();box.hidden=true;active=-1;return;}
       else return;
       buttons.forEach((btn,i)=>btn.classList.toggle("is-active",i===active));
     });
@@ -618,7 +640,6 @@
       if(!row.contains(event.target)){box.hidden=true;active=-1;}
     });
   }
-
   function coverImage(url,alt="",loading="lazy"){
     return url
       ? "<span class='pz-media' data-pz-watermark><img loading='"+loading+"' referrerpolicy='no-referrer' alt='"+esc(alt)+"' src='"+esc(url)+"' onerror=\"this.style.display='none';this.parentElement.classList.add('media-failed')\"><span class='pz-watermark' aria-hidden='true'>PAPARAZZI</span></span>"
