@@ -1,20 +1,126 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0b0b"><title>Make me a celeb — PAPARAZZI🇬🇲</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f2efe8;color:#111;font-family:Arial,Helvetica,sans-serif}.wrap{max-width:900px;margin:auto;padding:24px 18px 70px}.brand{font-weight:900;letter-spacing:2px;font-size:13px}.back{color:#111;text-decoration:none;font-size:13px}.top{display:flex;justify-content:space-between;align-items:center;padding:10px 0 40px}.hero{background:#111;color:#fff;padding:42px 34px;margin-bottom:18px}.eyebrow{font-size:11px;letter-spacing:2px;color:#aaa;font-weight:800}.hero h1{font:700 clamp(40px,7vw,72px)/.95 Georgia,serif;margin:10px 0 18px;max-width:700px}.hero p{max-width:650px;color:#ddd;line-height:1.65}.card{background:#fff;border:1px solid #ddd;padding:28px;margin-top:14px}.steps{display:flex;gap:7px;overflow:auto;margin-bottom:18px}.step{padding:8px 11px;border:1px solid #ccc;font-size:11px;white-space:nowrap}.step.on{background:#111;color:#fff;border-color:#111}.state{display:none}.state.on{display:block}.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.field{margin-bottom:16px}.field.full{grid-column:1/-1}label{display:block;font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}input,textarea,select{width:100%;border:1px solid #bbb;background:#fff;padding:13px;font:inherit;border-radius:0}textarea{min-height:130px;resize:vertical}.help{font-size:12px;color:#777;line-height:1.55}.choice{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice button,.actions button,.actions a{border:1px solid #111;background:#fff;color:#111;padding:14px;font-weight:800;cursor:pointer;text-decoration:none;text-align:center}.choice button.on,.actions .dark{background:#111;color:#fff}.actions{display:flex;justify-content:space-between;gap:10px;margin-top:22px}.actions>*{flex:1}.status{padding:14px;background:#f5f5f5;margin-bottom:15px;display:none}.status.show{display:block}.ok{border-left:4px solid #111}.err{border-left:4px solid #b00}.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.photo{border:1px dashed #aaa;min-height:150px;padding:10px;font-size:12px;display:flex;flex-direction:column;justify-content:center;gap:7px}.photo img{width:100%;height:110px;object-fit:cover}.preview{background:#f5f3ee;padding:20px}.preview h3{font:700 30px Georgia,serif}.links a{display:block;color:#111;margin:6px 0}.success{text-align:center;padding:45px 20px}.success h2{font:700 42px Georgia,serif}@media(max-width:650px){.grid{grid-template-columns:1fr}.hero{padding:32px 22px}.card{padding:20px}.photos{grid-template-columns:1fr 1fr}.actions{flex-direction:column}.top{padding-bottom:25px}}
-body.auth-checking .hero,body.auth-checking #app{visibility:hidden}body.auth-checking #status{display:block;text-align:center;background:#111;color:#fff;border-left:0;margin-top:18px}body.auth-checking #status:before{content:'Checking your PAPARAZZI account…';}body.auth-checking #status{font-size:0}body.auth-checking #status:before{font-size:14px}</style></head>
-<body class="auth-checking"><div class="wrap"><div class="top"><a class="back" href="index.html">← PAPARAZZI</a><div class="brand">PAPARAZZI 🇬🇲</div></div>
-<section class="hero"><div class="eyebrow">THE SPOTLIGHT IS OPEN</div><h1>Make me a celeb.</h1><p>Are you an upcoming celebrity? Already known? A content creator, musician, artist, athlete, public figure — or simply building something people should know about? Submit yourself to PAPARAZZI.</p></section>
-<div id="status" class="status"></div><section id="app" class="card">
-<div class="steps"><span class="step on" data-n="1">01 TYPE</span><span class="step" data-n="2">02 YOU</span><span class="step" data-n="3">03 PHOTOS</span><span class="step" data-n="4">04 STORY</span><span class="step" data-n="5">05 SOCIALS</span><span class="step" data-n="6">06 PREVIEW</span></div>
-<div class="state on" data-s="1"><label>Which describes you?</label><div class="choice"><button class="type on" data-v="upcoming">I'm an upcoming celebrity</button><button class="type" data-v="celebrity">I'm already a celebrity</button><button class="type" data-v="creator">I'm a content creator</button><button class="type" data-v="spotlight">I want to be discovered</button></div><p class="help">PAPARAZZI can put people in the spotlight, but approval is based on the full picture — not just follower count.</p></div>
-<div class="state" data-s="2"><div class="grid"><div class="field"><label>Full name *</label><input id="full_name" required></div><div class="field"><label>Stage / public name</label><input id="stage_name"></div><div class="field"><label>Where in The Gambia? *</label><input id="location" placeholder="e.g. Serekunda, Brikama, Banjul"></div><div class="field"><label>Gambian connection *</label><select id="gambian"><option value="">Choose</option><option value="YES">Yes — I'm genuinely Gambian / connected to The Gambia</option><option value="NO">No</option></select></div></div><p class="help">This application is for people with a genuine Gambian connection and a real public-facing identity.</p></div>
-<div class="state" data-s="3"><p class="help">Upload a clear main image and at least one additional image. You can add more if they help us understand your public identity.</p><div class="photos"><div class="photo"><strong>Main image *</strong><input id="main_file" type="file" accept="image/*"></div><div class="photo"><strong>Additional image *</strong><input class="extra_file" type="file" accept="image/*"></div><div class="photo"><strong>More images</strong><input class="extra_file" type="file" accept="image/*" multiple></div></div><div id="photoStatus" class="help" style="margin-top:12px"></div></div>
-<div class="state" data-s="4"><div class="grid"><div class="field full"><label>About you *</label><textarea id="about" placeholder="Who are you, what are you known for, and what should people know?"></textarea></div><div class="field full"><label>What do you do? *</label><textarea id="what_you_do" placeholder="Creator, musician, entrepreneur, athlete, comedian, artist, presenter..."></textarea></div><div class="field"><label>Achievements / public work</label><textarea id="achievements"></textarea></div><div class="field"><label>Audience / reach</label><textarea id="audience" placeholder="Platforms, audience, community, events, public work..."></textarea></div><div class="field full"><label>Why should PAPARAZZI put you in the spotlight? *</label><textarea id="why_feature"></textarea></div></div></div>
-<div class="state" data-s="5"><div class="grid"><div class="field"><label>Instagram *</label><input id="instagram" placeholder="https://instagram.com/..."></div><div class="field"><label>TikTok *</label><input id="tiktok" placeholder="https://tiktok.com/@..."></div><div class="field"><label>Facebook</label><input id="facebook"></div><div class="field"><label>YouTube</label><input id="youtube"></div><div class="field"><label>X</label><input id="x_handle"></div><div class="field"><label>Other public social *</label><input id="other_social" placeholder="Another public profile link"></div><div class="field full"><label>Website — optional</label><input id="website_url" placeholder="https://..."></div></div><p class="help">Instagram + TikTok + at least one additional public social/profile link are required. A website is optional.</p></div>
-<div class="state" data-s="6"><div class="preview" id="preview"></div><p class="help">A PAPARAZZI will review this application. If approved, you'll receive a celebrity approval email. Your application can also be reviewed again later if it is not accepted the first time.</p></div>
-<div class="actions"><button id="prev">← Back</button><button id="next" class="dark">Continue →</button></div></section></div>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0b">
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="styles.css?v=42">
+<title>Make me a celeb — PAPARAZZI🇬🇲</title>
+</head>
+<body data-page="celebrity" class="auth-checking">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html">
+        <div class="brand-mark">PZ</div>
+        <div class="brand-copy">
+          <div class="brand-name">PAPARAZZI🇬🇲</div>
+          <div class="brand-sub">Make me a celeb</div>
+        </div>
+      </a>
+      <nav class="nav">
+        <a href="index.html">HOME</a>
+        <a href="newsroom.html">NEWSROOM</a>
+        <a href="index.html#beats">BEATS</a>
+        <a href="join.html">ACCOUNT</a>
+      </nav>
+      <button id="menu-btn" class="menu-btn" aria-label="Open menu" aria-expanded="false">☰</button>
+    </div>
+  </header>
+
+  <main class="celebrity-app">
+    <div class="celebrity-topbar">
+      <a class="celebrity-back" href="index.html">← Back</a>
+      <div class="celebrity-brand">PAPARAZZI / SPOTLIGHT</div>
+    </div>
+
+    <section class="celebrity-hero">
+      <div class="eyebrow">THE SPOTLIGHT IS OPEN</div>
+      <h1>Make me a celeb.</h1>
+      <p>Apply for a PAPARAZZI spotlight profile. Your application is reviewed before anything is published.</p>
+    </section>
+
+    <div id="status" class="celebrity-status" hidden></div>
+
+    <section id="app" class="celebrity-card">
+      <div class="celebrity-steps">
+        <span class="celebrity-step on" data-n="1">01 TYPE</span>
+        <span class="celebrity-step" data-n="2">02 YOU</span>
+        <span class="celebrity-step" data-n="3">03 PHOTOS</span>
+        <span class="celebrity-step" data-n="4">04 STORY</span>
+        <span class="celebrity-step" data-n="5">05 SOCIALS</span>
+        <span class="celebrity-step" data-n="6">06 PREVIEW</span>
+      </div>
+
+      <div class="celebrity-state on" data-s="1">
+        <div class="auth-step-label">01 · TYPE</div>
+        <h2>Which describes you?</h2>
+        <div class="celebrity-choice">
+          <button class="type on" data-v="upcoming">I'm an upcoming celebrity</button>
+          <button class="type" data-v="celebrity">I'm already a celebrity</button>
+          <button class="type" data-v="creator">I'm a content creator</button>
+          <button class="type" data-v="spotlight">I want to be discovered</button>
+        </div>
+      </div>
+
+      <div class="celebrity-state" data-s="2">
+        <div class="auth-step-label">02 · YOU</div>
+        <div class="celebrity-grid">
+          <div class="field"><label>Full name *</label><input id="full_name" required></div>
+          <div class="field"><label>Stage / public name</label><input id="stage_name"></div>
+          <div class="field"><label>Where in The Gambia? *</label><input id="location" placeholder="Serekunda, Brikama, Banjul"></div>
+          <div class="field"><label>Gambian connection *</label><select id="gambian"><option value="">Choose</option><option value="YES">Yes — I'm genuinely Gambian / connected to The Gambia</option><option value="NO">No</option></select></div>
+        </div>
+      </div>
+
+      <div class="celebrity-state" data-s="3">
+        <div class="auth-step-label">03 · PHOTOS</div>
+        <div class="celebrity-grid">
+          <div class="field"><label>Main image *</label><input id="main_file" type="file" accept="image/*"></div>
+          <div class="field"><label>Additional image *</label><input class="extra_file" type="file" accept="image/*"></div>
+          <div class="field"><label>More images</label><input class="extra_file" type="file" accept="image/*" multiple></div>
+        </div>
+        <div id="photoStatus" class="helper"></div>
+      </div>
+
+      <div class="celebrity-state" data-s="4">
+        <div class="auth-step-label">04 · STORY</div>
+        <div class="celebrity-grid">
+          <div class="field full"><label>About you *</label><textarea id="about"></textarea></div>
+          <div class="field full"><label>What do you do? *</label><textarea id="what_you_do"></textarea></div>
+          <div class="field"><label>Achievements / public work</label><textarea id="achievements"></textarea></div>
+          <div class="field"><label>Audience / reach</label><textarea id="audience"></textarea></div>
+          <div class="field full"><label>Why should PAPARAZZI spotlight you? *</label><textarea id="why_feature"></textarea></div>
+        </div>
+      </div>
+
+      <div class="celebrity-state" data-s="5">
+        <div class="auth-step-label">05 · SOCIALS</div>
+        <div class="celebrity-grid">
+          <div class="field"><label>Instagram *</label><input id="instagram" placeholder="https://instagram.com/..."></div>
+          <div class="field"><label>TikTok *</label><input id="tiktok" placeholder="https://tiktok.com/@..."></div>
+          <div class="field"><label>Facebook</label><input id="facebook"></div>
+          <div class="field"><label>YouTube</label><input id="youtube"></div>
+          <div class="field"><label>X</label><input id="x_handle"></div>
+          <div class="field"><label>Other public social *</label><input id="other_social" placeholder="Another public profile link"></div>
+          <div class="field full"><label>Website</label><input id="website_url" placeholder="https://..."></div>
+        </div>
+      </div>
+
+      <div class="celebrity-state" data-s="6">
+        <div class="auth-step-label">06 · PREVIEW</div>
+        <div class="celebrity-preview" id="preview"></div>
+      </div>
+
+      <div class="celebrity-actions">
+        <button id="prev" class="btn btn-ghost" type="button">← Back</button>
+        <button id="next" class="btn btn-dark" type="button">Continue →</button>
+      </div>
+    </section>
+  </main>
+
 <script>
+
 const API="https://paparazzi-api.squashberrypay.workers.dev";let step=1,type="upcoming",mainImage="",images=[];
 const $=id=>document.getElementById(id),val=id=>$(id)?.value.trim()||"";
 function status(t,ok=false){const x=$("status");x.textContent=t;x.className="status show "+(ok?"ok":"err")}
@@ -29,4 +135,19 @@ function validate(){if(step===2&&(!val("full_name")||!val("location")||!val("gam
 $("prev").onclick=()=>{if(step>1){step--;render()}}
 $("next").onclick=async()=>{try{if(step<6){validate();step++;render()}else{validate();$("next").disabled=true;const body={application_type:type,full_name:val("full_name"),stage_name:val("stage_name"),main_image_url:mainImage,additional_images:images,about:val("about"),what_you_do:val("what_you_do"),location:val("location"),instagram:val("instagram"),tiktok:val("tiktok"),facebook:val("facebook"),youtube:val("youtube"),x_handle:val("x_handle"),other_social:val("other_social"),website_url:val("website_url"),achievements:val("achievements"),audience:val("audience"),why_feature:val("why_feature"),gambian_eligibility:val("gambian")};await req("/api/celebrity-applications",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});$("app").innerHTML="<div class='success'><div class='eyebrow'>APPLICATION RECEIVED</div><h2>A PAPARAZZI is on it.</h2><p>Your celebrity application has been submitted for review. If approved, we'll send your celebrity approval to your email. Your application stays on file even if it isn't accepted right now.</p><p><a class='back' href='index.html'>← Back to PAPARAZZI</a></p></div>"}}catch(e){status(e.message);$("next").disabled=false}};
 render();init();
-</script></body></html>
+
+</script>
+<script src="app.js?v=42"></script>
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  const menu=document.getElementById("menu-btn");
+  const nav=document.createElement("div");
+  nav.className="mobile-nav";
+  nav.id="mobile-nav";
+  nav.innerHTML="<a href='index.html'>Home</a><a href='newsroom.html'>Newsroom</a><a href='index.html#beats'>Beats</a><a href='join.html'>Account</a>";
+  document.body.appendChild(nav);
+  if(menu)menu.onclick=function(){nav.classList.toggle("is-open");menu.setAttribute("aria-expanded",nav.classList.contains("is-open")?"true":"false");};
+});
+</script>
+</body>
+</html>
