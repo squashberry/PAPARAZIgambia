@@ -2387,3 +2387,6 @@ body[data-page] .container{
 [data-page="celebrity"] .status{display:none}
 [data-page="celebrity"] .status.show{display:block}
 [data-page="celebrity"].auth-checking .celebrity-app{visibility:hidden}
+
+/* App navigation: internal screens open directly into the interface. */
+body[data-page]:not([data-page="home"]) .splash{display:none!important}
