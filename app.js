@@ -978,14 +978,27 @@
     const gallery=mediaUrls.length>1?"<div class='story-gallery'>"+mediaUrls.map((url,index)=>"<figure class='story-gallery-item'><span class='pz-media' data-pz-watermark><img loading='lazy' referrerpolicy='no-referrer' src='"+esc(url)+"' alt='"+esc(story.title+" — image "+(index+1))+"'><span class='pz-watermark' aria-hidden='true'>PAPARAZZI</span></span><figcaption>PHOTO "+String(index+1).padStart(2,"0")+"</figcaption></figure>").join("")+"</div>":"";
 
     const storyUrl=SITE_ORIGIN+"/story.html?slug="+encodeURIComponent(story.slug);
-    const savedKey="paparazzi_saved_stories";
-    const isSaved=()=>{try{return JSON.parse(localStorage.getItem(savedKey)||"[]").includes(String(story.id||story.slug));}catch(_){return false;}};
-    const toggleSaved=()=>{
-      const key=String(story.id||story.slug); let list=[];
-      try{list=JSON.parse(localStorage.getItem(savedKey)||"[]");}catch(_){}
-      if(list.includes(key))list=list.filter(x=>x!==key);else list.unshift(key);
-      try{localStorage.setItem(savedKey,JSON.stringify(list.slice(0,200)));}catch(_){}
-      return list.includes(key);
+    let savedState=false;
+    if(story.id&&window.PAPARAZZI_API?.social?.isSaved){
+      try{
+        const savedResult=await withTimeout(window.PAPARAZZI_API.social.isSaved(story.id),3500,null);
+        savedState=Boolean(savedResult?.data?.saved);
+      }catch(_){ }
+    }
+
+    const toggleSaved=async()=>{
+      if(!story.id||!window.PAPARAZZI_API?.social)return null;
+      const session=await requireAccount("Save this story"); if(!session)return null;
+      const next=!savedState;
+      const result=next
+        ?await window.PAPARAZZI_API.social.saveArticle(story.id)
+        :await window.PAPARAZZI_API.social.unsaveArticle(story.id);
+      if(result?.error){
+        toast(result.error.message||"We couldn't update your saves.","error");
+        return savedState;
+      }
+      savedState=Boolean(result?.data?.saved);
+      return savedState;
     };
     const requireAccount=async action=>{
       const session=await currentSession(); if(session)return session;
@@ -999,8 +1012,9 @@
     };
     const openStoryActionModal=async type=>{
       if(type==="save"){
-        const session=await requireAccount("Save this story"); if(!session)return;
-        const saved=toggleSaved(),btn=$("#story-save-action");
+        const saved=await toggleSaved();
+        if(saved===null)return;
+        const btn=$("#story-save-action");
         if(btn)btn.textContent=saved?"✓ Saved":"♡ Save";
         toast(saved?"Story saved to your PAPARAZZI saves.":"Story removed from your saves.","success"); return;
       }
@@ -1043,7 +1057,7 @@
     installArticleSchema(story,author,storyUrl,storyImage);
 
     root.innerHTML="<div class='container story-reader'>"
-      +"<div class='story-reader-head'><div class='story-head-row'><div><div class='kicker'>"+esc(story.category||"Story")+"</div></div><div class='story-overflow-wrap'><button id='story-overflow' class='story-overflow' type='button' aria-label='Story options' aria-expanded='false'><span></span><span></span><span></span></button><div id='story-overflow-menu' class='story-overflow-menu' hidden><button type='button' data-story-action='share'>Share story</button><button id='story-save-action' type='button' data-story-action='save'>"+(isSaved()?"✓ Saved":"♡ Save")+"</button><a href='"+authorHref(author.username)+"'>View PAPARAZZI</a><button type='button' data-story-action='takedown'>Request takedown</button><button type='button' data-story-action='correction'>Request correction</button></div></div></div>"
+      +"<div class='story-reader-head'><div class='story-head-row'><div><div class='kicker'>"+esc(story.category||"Story")+"</div></div><div class='story-overflow-wrap'><button id='story-overflow' class='story-overflow' type='button' aria-label='Story options' aria-expanded='false'><span></span><span></span><span></span></button><div id='story-overflow-menu' class='story-overflow-menu' hidden><button type='button' data-story-action='share'>Share story</button><button id='story-save-action' type='button' data-story-action='save'>"+(savedState?"✓ Saved":"♡ Save")+"</button><a href='"+authorHref(author.username)+"'>View PAPARAZZI</a><button type='button' data-story-action='takedown'>Request takedown</button><button type='button' data-story-action='correction'>Request correction</button></div></div></div>"
       +"<h1>"+esc(story.title)+"</h1><p class='story-dek'>"+esc(story.excerpt||"")+"</p>"
       +(Array.isArray(story.hashtags)&&story.hashtags.length?"<div class='story-tags story-tags-large'>"+story.hashtags.map(t=>"<a href='newsroom.html?tag="+encodeURIComponent(t.replace(/^#/,""))+"'>"+esc(t.startsWith("#")?t:"#"+t)+"</a>").join("")+"</div>":"")
       +"<div class='meta' style='margin-top:18px'><a class='author-link' href='"+authorHref(author.username)+"'><strong>"+esc(author.display_name||"PAPARAZZI🇬🇲")
