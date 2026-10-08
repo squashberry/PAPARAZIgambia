@@ -3,6 +3,8 @@
 
   const cfg = window.PAPARAZI_CONFIG || {};
   const API_BASE = String(cfg.apiBase || "").replace(/\/+$/,"");
+  const SOCIAL_API_BASE = String(cfg.socialApiBase || "").replace(/\/+$/,"");
+  const SOCIAL_API_KEY = String(cfg.socialApiKey || "").trim();
   const AUTH_EVENT = "paparazzi-auth-change";
 
   function makeError(message, status){
@@ -47,6 +49,39 @@
       };
     }
     return { data:payload, error:null };
+  }
+
+  async function socialRequest(path, options={}){
+    if(!SOCIAL_API_BASE)return {data:null,error:makeError("Social API is not configured.")};
+    const headers=new Headers(options.headers||{});
+    headers.set("Accept","application/json");
+    if(options.body!==undefined && !(options.body instanceof FormData))headers.set("Content-Type","application/json");
+    if(SOCIAL_API_KEY)headers.set("apikey",SOCIAL_API_KEY);
+
+    // The legacy PAPARAZZI API owns the browser session cookie. Re-use the
+    // Supabase-compatible access token when the session endpoint exposes one,
+    // while keeping public social reads usable without a sign-in.
+    if(!headers.has("Authorization")){
+      try{
+        const sessionResult=await client.auth.getSession();
+        const token=sessionResult?.data?.session?.access_token || sessionResult?.data?.session?.accessToken || "";
+        if(token)headers.set("Authorization","Bearer "+token);
+      }catch(_){ }
+    }
+
+    let response;
+    try{
+      response=await fetch(SOCIAL_API_BASE+path,{...options,headers});
+    }catch(error){
+      return {data:null,error:makeError(error?.message||"Social request failed.")};
+    }
+
+    let payload=null;
+    try{payload=await response.json();}catch(_){ }
+    if(!response.ok){
+      return {data:payload?.data??payload??null,error:makeError(payload?.error||payload?.message||("Request failed ("+response.status+")."),response.status)};
+    }
+    return {data:payload,error:null};
   }
 
   function dispatchAuth(){
@@ -166,6 +201,21 @@
   }
 
   const client={
+    social:{
+      async getPostStats(articleId){return normalize(await socialRequest("/posts/"+encodeURIComponent(articleId)+"/stats"));},
+      async likePost(articleId){return normalize(await socialRequest("/posts/"+encodeURIComponent(articleId)+"/like",{method:"POST",write:true}));},
+      async unlikePost(articleId){return normalize(await socialRequest("/posts/"+encodeURIComponent(articleId)+"/like",{method:"DELETE",write:true}));},
+      async getComments(articleId,limit=50){return normalize(await socialRequest("/posts/"+encodeURIComponent(articleId)+"/comments?limit="+encodeURIComponent(limit)));},
+      async addComment(articleId,payload){return normalize(await socialRequest("/posts/"+encodeURIComponent(articleId)+"/comments",{method:"POST",body:JSON.stringify(payload),write:true}));},
+      async updateComment(commentId,body){return normalize(await socialRequest("/comments/"+encodeURIComponent(commentId),{method:"PATCH",body:JSON.stringify({body}),write:true}));},
+      async deleteComment(commentId){return normalize(await socialRequest("/comments/"+encodeURIComponent(commentId),{method:"DELETE",write:true}));},
+      async likeComment(commentId){return normalize(await socialRequest("/comments/"+encodeURIComponent(commentId)+"/like",{method:"POST",write:true}));},
+      async unlikeComment(commentId){return normalize(await socialRequest("/comments/"+encodeURIComponent(commentId)+"/like",{method:"DELETE",write:true}));},
+      async listSaved(limit=50){return normalize(await socialRequest("/saved?limit="+encodeURIComponent(limit)));},
+      async isSaved(articleId){return normalize(await socialRequest("/saved/"+encodeURIComponent(articleId)));},
+      async saveArticle(articleId){return normalize(await socialRequest("/saved/"+encodeURIComponent(articleId),{method:"POST",write:true}));},
+      async unsaveArticle(articleId){return normalize(await socialRequest("/saved/"+encodeURIComponent(articleId),{method:"DELETE",write:true}));}
+    },
     auth:{
       async getSession(){
         const result=await request("/api/auth/session");
