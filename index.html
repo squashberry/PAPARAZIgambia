@@ -8,7 +8,7 @@
 <meta name="description" content="PAPARAZZI🇬🇲 — The Gambia's people-powered social, entertainment and culture newsroom.">
 <link rel="icon" href="favicon.svg">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="styles.css?v=44">
+<link rel="stylesheet" href="styles.css?v=47">
 <title>PAPARAZZI🇬🇲 — The Gambia's Social Scene</title>
 
 <link rel="canonical" href="https://squashberry.github.io/PAPARAZZIgambia/">
@@ -37,6 +37,19 @@
 <main id="top">
 <div id="home-search-sentinel" aria-hidden="true"></div><div class="home-search-shell"><div class="home-search home-search-top"><div class="container"><label for="home-search">SEARCH THE NEWSROOM</label><div class="home-search-row"><input id="home-search" type="search" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="home-search-suggestions" placeholder="Search stories, people, beats or #hashtags…"><span>⌕</span></div></div></div></div>
 <section class="home-ticker"><div class="container home-ticker-inner"><span class="ticker-label"><i></i> PAPARAZZI NOW</span><div class="ticker-track" id="ticker-track">The street is talking. We are listening.</div><a href="submit.html">SEND THE TIP →</a></div></section>
+<section class="home-stories" aria-label="PAPARAZZI Stories">
+  <div class="container">
+    <div class="home-stories-head">
+      <div><div class="eyebrow">PAPARAZZI STORIES</div><h2>What's happening now.</h2></div>
+      <a class="text-link" href="submit.html?mode=story">Add to Stories →</a>
+    </div>
+    <div id="home-stories-rail" class="home-stories-rail" aria-live="polite">
+      <a class="story-add-card" href="submit.html?mode=story" aria-label="Add to PAPARAZZI Stories">
+        <span class="story-add-plus">+</span><strong>Add to Stories</strong><small>Photo or video</small>
+      </a>
+    </div>
+  </div>
+</section>
 
 <section class="hero hero-home">
   <div class="container">
@@ -111,5 +124,5 @@
 <script src="https://telegram.org/js/telegram-web-app.js?63"></script><script src="telegram-mini-app.js?v=42"></script><script src="config.js?v=42"></script>
 <script src="api.js?v=42"></script>
 <script src="app.js?v=42"></script>
-<script>(function(){document.addEventListener("DOMContentLoaded",async function(){try{const api=window.PAPARAZZI_API;if(!api)return;const r=await api.auth.getSession();if(!r?.data?.session)return;const p=await api.getMyProfile();if(p?.data?.is_paparazzi){const b=document.getElementById("celebrity-paparazzo-banner");if(b)b.hidden=true;}}catch(_){}});})();</script><script>window.addEventListener("load",function(){if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=42").catch(function(){});});</script>
+<script>(function(){document.addEventListener("DOMContentLoaded",async function(){try{const api=window.PAPARAZZI_API;if(!api)return;const r=await api.auth.getSession();if(!r?.data?.session)return;const p=await api.getMyProfile();if(p?.data?.is_paparazzi){const b=document.getElementById("celebrity-paparazzo-banner");if(b)b.hidden=true;}}catch(_){}});})();</script><script>window.addEventListener("load",function(){if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js?v=47").catch(function(){});});</script>
 </body></html>
