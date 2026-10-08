@@ -836,6 +836,7 @@
   async function initHome(){
     if(!$("#lead-title"))return;
     initHomeSearchStickiness();
+    initHomeStories();
 
     updateSocialMeta({
       title:"PAPARAZZI🇬🇲 — The Gambia's Social Scene",
@@ -1645,6 +1646,31 @@
     loadMyArticles(user.id);
   }
 
+
+  async function initHomeStories(){
+    const rail=$("#home-stories-rail");
+    if(!rail)return;
+    const render=(items)=>{
+      const visible=(Array.isArray(items)?items:[]).slice(0,8);
+      const cards=visible.map((story,index)=>{
+        const image=story.cover_url
+          ? "<img loading='lazy' src='"+esc(story.cover_url)+"' alt='"+esc(story.title||"PAPARAZZI story")+"' />"
+          : "<div class='story-card-fallback'>"+String(index+1).padStart(2,"0")+"</div>";
+        return "<a class='home-story-card' data-morph href='"+storyHref(story)+"'>"+image+
+          "<div class='home-story-shade'></div><div class='home-story-copy'><span>"+esc(story.category||"Story")+"</span><strong>"+esc(story.title||"PAPARAZZI")+"</strong></div></a>";
+      }).join("");
+      rail.innerHTML=
+        "<a class='story-add-card' href='submit.html?mode=story' aria-label='Add to PAPARAZZI Stories'><span class='story-add-plus'>+</span><strong>Add to Stories</strong><small>Photo or video</small></a>"+
+        cards;
+    };
+    try{
+      const result=await fetchStories(12);
+      render(result.data||[]);
+    }catch(_){
+      render([]);
+    }
+  }
+
   async function initSubmit(){
     const form=$("#tip-form");
     if(!form)return;
@@ -1652,27 +1678,139 @@
     const anonymous=$("#tip-anonymous");
     const identity=$("#tip-identity");
     const mediaInput=$("#tip-media");
+    const cameraInput=$("#tip-camera-file");
     const mediaList=$("#tip-media-list");
+    const cameraOpen=$("#tip-camera-open");
+    const cameraClose=$("#tip-camera-close");
+    const cameraSnap=$("#tip-camera-snap");
+    const cameraPanel=$("#story-camera-panel");
+    const cameraVideo=$("#tip-camera-preview");
+    const cameraCanvas=$("#tip-camera-canvas");
     if(!anonymous||!identity)return;
+
+    const params=new URLSearchParams(location.search);
+    const storyMode=params.get("mode")==="story";
+    const pageEyebrow=$("#submit-eyebrow");
+    const pageTitle=$("#submit-page-title");
+    const pageCopy=$("#submit-page-copy");
+    const mediaTitle=$("#submit-media-title");
+    const mediaHelp=$("#submit-media-help");
+    if(storyMode){
+      if(pageEyebrow)pageEyebrow.textContent="PAPARAZZI STORIES";
+      if(pageTitle)pageTitle.innerHTML="Add to<br><em>Stories.</em>";
+      if(pageCopy)pageCopy.textContent="Share a moment with PAPARAZZI. Take a photo, choose media from your device, then send it to the same private review queue.";
+      if(mediaTitle)mediaTitle.textContent="Capture the moment.";
+      if(mediaHelp)mediaHelp.textContent="Camera-first on mobile. Nothing is published automatically.";
+      document.body.classList.add("submit-story-mode");
+    }
 
     const sync=()=>identity.style.display=anonymous.checked?"none":"grid";
     anonymous.addEventListener("change",sync);
     sync();
 
+    let selectedFiles=[];
+
+    const fileKey=file=>[file.name,file.size,file.lastModified,file.type].join("|");
+    const addFiles=(files)=>{
+      const incoming=Array.from(files||[]);
+      const combined=[...selectedFiles,...incoming];
+      const unique=[];
+      const seen=new Set();
+      for(const file of combined){
+        const key=fileKey(file);
+        if(seen.has(key))continue;
+        seen.add(key);unique.push(file);
+      }
+      const error=validateMediaFiles(unique,20);
+      if(error){
+        setStatus($("#tip-status"),error,"error");
+        return false;
+      }
+      selectedFiles=unique;
+      renderLocalMediaPreview();
+      return true;
+    };
+    const removeFile=(index)=>{
+      selectedFiles.splice(index,1);
+      renderLocalMediaPreview();
+    };
+    const renderLocalMediaPreview=()=>{
+      if(!mediaList)return;
+      if(!selectedFiles.length){
+        mediaList.innerHTML="<div class='upload-empty'>No media selected yet.</div>";
+        return;
+      }
+      mediaList.innerHTML=selectedFiles.map((file,index)=>{
+        const src=URL.createObjectURL(file);
+        const visual=/^image\//i.test(file.type)
+          ? "<img src='"+src+"' alt='"+esc(file.name)+"'>"
+          : "<div class='upload-video-tile'>VIDEO</div>";
+        return "<div class='upload-preview-item'>"+visual+
+          "<button type='button' class='upload-preview-remove' data-remove-media='"+index+"' aria-label='Remove "+esc(file.name)+"'>×</button>"+
+          "<span>"+String(index+1).padStart(2,"0")+"</span></div>";
+      }).join("");
+      $$(".upload-preview-remove",mediaList).forEach(btn=>btn.onclick=()=>removeFile(Number(btn.dataset.removeMedia)));
+    };
+    renderLocalMediaPreview();
+
     if(mediaInput){
-      mediaInput.addEventListener("change",()=>renderSelectedFiles(mediaInput,"#tip-media-list",20));
+      mediaInput.addEventListener("change",e=>{
+        addFiles(e.target.files);
+        e.target.value="";
+      });
     }
+    if(cameraInput){
+      cameraInput.addEventListener("change",e=>{
+        addFiles(e.target.files);
+        e.target.value="";
+      });
+    }
+
+    let cameraStream=null;
+    const stopCamera=()=>{
+      cameraStream?.getTracks?.().forEach(track=>track.stop());
+      cameraStream=null;
+      if(cameraVideo)cameraVideo.srcObject=null;
+      if(cameraPanel)cameraPanel.hidden=true;
+    };
+    const startCamera=async()=>{
+      if(!cameraPanel||!cameraVideo)return;
+      try{
+        cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+        cameraVideo.srcObject=cameraStream;
+        cameraPanel.hidden=false;
+        document.body.classList.add("camera-open");
+      }catch(_){
+        document.body.classList.remove("camera-open");
+        cameraInput?.click();
+      }
+    };
+    cameraOpen?.addEventListener("click",startCamera);
+    cameraClose?.addEventListener("click",()=>{stopCamera();document.body.classList.remove("camera-open");});
+    cameraSnap?.addEventListener("click",async()=>{
+      if(!cameraStream||!cameraVideo||!cameraCanvas)return;
+      const width=cameraVideo.videoWidth||1280,height=cameraVideo.videoHeight||720;
+      cameraCanvas.width=width;cameraCanvas.height=height;
+      const ctx=cameraCanvas.getContext("2d");
+      ctx.drawImage(cameraVideo,0,0,width,height);
+      const blob=await new Promise(resolve=>cameraCanvas.toBlob(resolve,"image/jpeg",0.9));
+      if(!blob)return;
+      addFiles([new File([blob],"paparazzi-"+Date.now()+".jpg",{type:"image/jpeg",lastModified:Date.now()})]);
+      cameraSnap.classList.add("is-shot");
+      setTimeout(()=>cameraSnap.classList.remove("is-shot"),180);
+    });
+    window.addEventListener("pagehide",stopCamera,{once:true});
 
     form.addEventListener("submit",async e=>{
       e.preventDefault();
-
+      stopCamera();
       if($("#website-check")?.value)return;
       if(!supabase){
         setStatus($("#tip-status"),"The tip line is temporarily unavailable.","error");
         return;
       }
 
-      const files=Array.from(mediaInput?.files||[]);
+      const files=selectedFiles.slice();
       const mediaError=validateMediaFiles(files,20);
       if(mediaError){
         setStatus($("#tip-status"),mediaError,"error");
@@ -1680,18 +1818,18 @@
       }
 
       const submitId=crypto.randomUUID();
-      const submitButton=form.querySelector("button[type='submit'],button.btn-dark");
+      const submitButton=form.querySelector("button[type='submit']");
       const originalText=submitButton?.textContent||"Send tip privately →";
       if(submitButton){
         submitButton.disabled=true;
-        submitButton.textContent=files.length?"Uploading media…":"Sending tip…";
+        submitButton.textContent=files.length?(storyMode?"Publishing media…":"Uploading media…"):"Sending…";
       }
 
       try{
         let media=[];
         if(files.length){
           media=await uploadMediaFiles(files,TIPS_BUCKET,"tips/"+submitId,(done,total)=>{
-            if(submitButton)submitButton.textContent="Uploading "+done+" of "+total+"…";
+            if(submitButton)submitButton.textContent=(storyMode?"Uploading story media ":"Uploading ")+done+" of "+total+"…";
           });
         }
 
@@ -1701,7 +1839,7 @@
           is_anonymous:anonymous.checked,
           submitter_name:anonymous.checked?null:$("#tip-name").value.trim(),
           submitter_email:anonymous.checked?null:$("#tip-email").value.trim(),
-          category:$("#tip-category").value,
+          category:storyMode?"Story":$("#tip-category").value,
           title:$("#tip-title").value.trim()||null,
           story:$("#tip-story").value.trim(),
           location:$("#tip-location").value.trim()||null,
@@ -1715,7 +1853,7 @@
 
         const result=await withTimeout(
           supabase.from("paparazi_submissions").insert(payload).select("id").single(),
-          8000,
+          10000,
           {error:{message:"The tip line took too long to respond. Try again."}}
         );
 
@@ -1724,12 +1862,15 @@
           return;
         }
 
+        selectedFiles=[];
         form.reset();
-        if(mediaList)mediaList.innerHTML="";
+        renderLocalMediaPreview();
         anonymous.checked=true;
         sync();
         setStatus($("#tip-status"),
-          "Tip received"+(media.length?" with "+media.length+" media file"+(media.length===1?"":"s"):"")+". Keep this reference: "+(result?.data?.id?String(result.data.id).slice(0,8).toUpperCase():"RECEIVED")+".",
+          (storyMode?"Story submission received":"Tip received")+
+          (media.length?" with "+media.length+" media file"+(media.length===1?"":"s"):"")+
+          ". Keep this reference: "+(result?.data?.id?String(result.data.id).slice(0,8).toUpperCase():"RECEIVED")+".",
           "ok"
         );
       }catch(error){
