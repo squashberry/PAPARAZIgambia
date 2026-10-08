@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0b0b"><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=44"><title>Tell Paparazzi — PAPARAZZI🇬🇲</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0b0b"><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css?v=47"><title>Tell Paparazzi — PAPARAZZI🇬🇲</title>
 <meta name="robots" content="noindex,follow,noarchive">
 <meta name="author" content="PAPARAZZI🇬🇲"></head>
 <body data-page="submit"><div class="splash"><div class="splash-inner"><div class="splash-kicker">The tip line is open</div><div class="splash-word">TELL US <span class="flag">🇬🇲</span></div><div class="splash-flash"></div></div></div>
@@ -19,7 +19,7 @@
 })();
 </script>
 <header class="site-header"><div class="header-inner"><a class="brand" href="index.html"><div class="brand-mark">PZ</div><div class="brand-copy"><div class="brand-name">PAPARAZZI🇬🇲</div><div class="brand-sub">Tell Paparazzi</div></div></a><nav class="nav"><a href="index.html">HOME</a><a href="index.html#latest">LATEST</a><a href="index.html#beats">BEATS</a><a href="why-join.html">WHY JOIN</a><a href="submit.html">TELL PAPARAZZI</a><a href="advertise.html">ADVERTISE</a><a id="nav-notifications" class="nav-icon-link" href="notifications.html" hidden aria-label="Notifications">🔔</a><a id="nav-account" class="nav-cta" href="join.html">SIGN IN</a></nav><button id="menu-btn" class="menu-btn" aria-label="Open menu" aria-expanded="false">☰</button></div></header><div id="mobile-nav" class="mobile-nav" aria-hidden="true"><a href="index.html">Home</a><a href="index.html#latest">Latest</a><a href="index.html#beats">Beats</a><a href="why-join.html">Why join PAPARAZZI</a><a href="submit.html">Tell Paparazzi</a><a href="advertise.html">Advertise</a><a id="mobile-notifications" href="notifications.html" hidden>🔔 Notifications</a><a id="mobile-account" href="join.html">Sign in</a></div>
-<main class="submit-shell"><div class="container"><div class="page-head"><div class="eyebrow">PRIVATE TIP LINE</div><h1>You saw it.<br><em>Tell us.</em></h1><p>Got a photo, a lead, a strange little detail, or the story behind a viral moment? Send it. Anonymous is completely fine.</p></div>
+<main class="submit-shell"><div class="container"><div class="page-head" id="submit-page-head"><div class="eyebrow" id="submit-eyebrow">PRIVATE TIP LINE</div><h1 id="submit-page-title">You saw it.<br><em>Tell us.</em></h1><p id="submit-page-copy">Got a photo, a lead, a strange little detail, or the story behind a viral moment? Send it. Anonymous is completely fine.</p></div>
 <div class="split-panel"><section class="panel"><form id="tip-form" class="form-grid state-form" data-state-form>
 <div class="state-progress"><span data-state-dot class="active"></span><span></span><span data-state-dot></span><span></span><span data-state-dot></span><span></span><span data-state-dot></span><span data-state-count>1 / 4</span></div>
 <div class="state-step" data-state-step>
@@ -36,8 +36,22 @@
 <div class="form-actions"><button type="button" class="btn btn-ghost" data-state-back>← Back</button><button type="button" class="btn btn-dark" data-state-next>Continue →</button></div>
 </div>
 <div class="state-step" data-state-step hidden>
-<div class="auth-step-label">03 · MEDIA</div><h2>Show us what you saw.</h2>
-<div class="field"><label for="tip-media">Photos & videos <span class="field-optional">(optional)</span></label><label class="file-picker" for="tip-media"><span>Choose files</span><strong>Up to 20</strong></label><input id="tip-media" class="file-native" type="file" accept="image/*,video/*" multiple><div id="tip-media-list" class="upload-list"></div><div class="helper">Send up to 20 image or video files. Maximum 50 MB per file.</div></div>
+<div class="auth-step-label">03 · MEDIA</div><h2 id="submit-media-title">Show us what you saw.</h2>
+<p class="helper" id="submit-media-help">You can take a photo right now or choose media already on your device. Nothing is posted automatically.</p>
+<div class="story-capture-tools">
+  <button id="tip-camera-open" class="story-capture-btn story-capture-btn-dark" type="button">◎ <span>Open camera</span></button>
+  <label class="story-capture-btn" for="tip-media">▧ <span>Choose from device</span></label>
+</div>
+<input id="tip-media" class="file-native" type="file" accept="image/*,video/*" multiple>
+<input id="tip-camera-file" class="file-native" type="file" accept="image/*" capture="environment">
+<div id="story-camera-panel" class="story-camera-panel" hidden>
+  <div class="story-camera-head"><strong>Camera</strong><button id="tip-camera-close" type="button" aria-label="Close camera">×</button></div>
+  <video id="tip-camera-preview" autoplay playsinline muted></video>
+  <div class="story-camera-controls"><button id="tip-camera-snap" class="story-camera-shutter" type="button" aria-label="Take photo"><span></span></button></div>
+</div>
+<canvas id="tip-camera-canvas" hidden></canvas>
+<div id="tip-media-list" class="upload-grid"></div>
+<div class="helper">Up to 20 photos/videos · Maximum 50 MB per file · Photos are prepared with the normal PAPARAZZI media treatment before upload.</div>
 <div class="form-actions"><button type="button" class="btn btn-ghost" data-state-back>← Back</button><button type="button" class="btn btn-dark" data-state-next>Review tip →</button></div>
 </div>
 <div class="state-step" data-state-step hidden>
@@ -46,4 +60,4 @@
 <div class="form-actions"><button type="button" class="btn btn-ghost" data-state-back>← Back</button><button class="btn btn-dark" type="submit">Send tip privately →</button></div><div id="tip-status" class="status-box"></div>
 </div></form></section>
 <aside class="panel"><div class="eyebrow">WHAT HAPPENS NEXT</div><h2>No instant posting. We check first.</h2><p>Your submission goes into the private PAPARAZZI tip queue. The site does not publish anonymous tips or their media automatically. Attachments stay private for review.</p><div class="pill-row"><span class="pill">Gambia only</span><span class="pill">Anonymous option</span><span class="pill">Human review</span><span class="pill">Private media</span><span class="pill">No auto-posting</span></div><p class="helper">Please don't send private medical information, passwords, private addresses, or material that puts somebody in danger.</p></aside></div></div></main>
-<footer class="footer"><div class="container"><div class="footer-bottom"><span><a href="https://www.tiktok.com/@paparazzigambia?lang=en" target="_blank" rel="noopener noreferrer">TikTok @paparazzigambia</a></span><span>© 2026 PAPARAZZI🇬🇲</span><span>Tip line open 24/7.</span></div></div></footer><div class="toast"></div><script src="config.js?v=42"></script><script src="api.js?v=42"></script><script src="app.js?v=42"></script></body></html>
+<footer class="footer"><div class="container"><div class="footer-bottom"><span><a href="https://www.tiktok.com/@paparazzigambia?lang=en" target="_blank" rel="noopener noreferrer">TikTok @paparazzigambia</a></span><span>© 2026 PAPARAZZI🇬🇲</span><span>Tip line open 24/7.</span></div></div></footer><div class="toast"></div><script src="config.js?v=47"></script><script src="api.js?v=47"></script><script src="app.js?v=47"></script></body></html>
